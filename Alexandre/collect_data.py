@@ -2,6 +2,7 @@ import pandas
 import numpy
 import datetime
 
+
 class Stock:
     def __init__(self,name):
         self.stock=pandas.read_csv(filepath_or_buffer='../Data/'+name+'.csv')
@@ -17,3 +18,9 @@ RUI_PA.MA()
 
 print(RUI_PA.stock)
 print(RUI_PA.stock_MA)
+
+VPK_AS=Stock(name='VPK.AS')
+VPK_AS.MA()
+
+print(VPK_AS.stock)
+print(VPK_AS.stock_MA)
