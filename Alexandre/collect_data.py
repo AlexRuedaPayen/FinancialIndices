@@ -1,7 +1,6 @@
 import pandas
-import numpy
+import math
 import datetime
-
 
 class Stock:
     def __init__(self,name):
@@ -13,14 +12,38 @@ class Stock:
         end_date=max(self.stock['Date'].values)
         self.stock_MA=(((self.stock).rolling(window=day).mean()).loc[start_date:end_date, :])
 
+    def derivative_rate(self,order=2):
+        self.derivative_rate=[]
+        df=self.stock.loc[:, self.stock.columns != 'Date']
+        for i in range(1,order+1):
+            n=df.shape[0]
+            f_x=df.iloc[1:(n-1),].values
+            f_a=df.iloc[0:(n-2),].values
+            tmpr=f_x
+            tmpr=tmpr-f_a
+            tmpr=tmpr/f_a
+            tmpr=pandas.DataFrame(tmpr)
+            tmpr.columns=df.columns
+            self.derivative_rate.append(tmpr)
+
+
 RUI_PA=Stock(name='RUI.PA')
-RUI_PA.MA()
-
-print(RUI_PA.stock)
-print(RUI_PA.stock_MA)
-
 VPK_AS=Stock(name='VPK.AS')
-VPK_AS.MA()
+BP_L=Stock(name="BP.L")
+SHELL_AS=Stock(name="SHELL.AS")
+TTE_PA=Stock(name="TTE.PA")
+XOM=Stock(name="XOM")
 
-print(VPK_AS.stock)
-print(VPK_AS.stock_MA)
+RUI_PA.MA()
+VPK_AS.MA()
+BP_L.MA()
+SHELL_AS.MA()
+TTE_PA.MA()
+XOM.MA()
+
+RUI_PA.derivative_rate()
+VPK_AS.derivative_rate()
+BP_L.derivative_rate()
+SHELL_AS.derivative_rate()
+TTE_PA.derivative_rate()
+XOM.derivative_rate()
