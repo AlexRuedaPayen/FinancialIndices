@@ -1,12 +1,15 @@
+from pickle import FALSE
 import pandas
 import math
 import datetime
 
 class Stock:
+
     def __init__(self,name):
         self.stock=pandas.read_csv(filepath_or_buffer='../Data/'+name+'.csv')
         self.stock.index=self.stock['Date']
         print(f'Data from '+ str(min(self.stock['Date'].values))+' to '+str(max(self.stock['Date'].values)))
+    
     def MA(self,day=7):
         start_date=str(datetime.datetime.strptime(min(self.stock['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
         end_date=max(self.stock['Date'].values)
@@ -24,7 +27,22 @@ class Stock:
             tmpr=tmpr/f_a
             tmpr=pandas.DataFrame(tmpr)
             tmpr.columns=df.columns
+            tmpr=tmpr.add_suffix('_'+str(i))
+            tmpr.index=(self.stock.index)[0:(n-2)]
+            print(tmpr)
             self.derivative_rate.append(tmpr)
+
+    def prediction_NN_black_box(data,days_ahead=4):
+        X_train_list=[]
+        for stock in data:
+            n=stock.stock.shape[0]
+            X_train_list.append(stock.stock.iloc[0:(n-6),])
+            for derivative in stock.derivative_rate:
+                n=derivative.shape[0]
+                X_train_list.append(stock.stock.iloc[0:(n-6),])
+        X_train=pandas.concat(X_train_list)
+                
+            
 
 
 RUI_PA=Stock(name='RUI.PA')
@@ -43,7 +61,9 @@ XOM.MA()
 
 RUI_PA.derivative_rate()
 VPK_AS.derivative_rate()
+RUI_PA.prediction_NN_black_box(data=VPK_AS)
+"""
 BP_L.derivative_rate()
 SHELL_AS.derivative_rate()
 TTE_PA.derivative_rate()
-XOM.derivative_rate()
+XOM.derivative_rate()"""
