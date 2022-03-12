@@ -3,6 +3,10 @@ import pandas
 import math
 import datetime
 
+"""from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, LSTM"""
+
 class Stock:
 
     def __init__(self,name):
@@ -29,22 +33,39 @@ class Stock:
             tmpr.columns=df.columns
             tmpr=tmpr.add_suffix('_'+str(i))
             tmpr.index=(self.stock.index)[0:(n-2)]
-            print(tmpr)
             self.derivative_rate.append(tmpr)
 
-    def prediction_NN_black_box(data,days_ahead=4):
+    def prediction_RNN_black_box(self,data,days_ahead=4):
         X_train_list=[]
+        X_train=[]
+        i=0
         for stock in data:
+            i+=1
             n=stock.stock.shape[0]
             X_train_list.append(stock.stock.iloc[0:(n-6),])
             for derivative in stock.derivative_rate:
                 n=derivative.shape[0]
-                X_train_list.append(stock.stock.iloc[0:(n-6),])
-        X_train=pandas.concat(X_train_list)
+                print(derivative)
+                X_train_list.append(derivative.iloc[0:(n-6),])
+                tmpr=pandas.concat(X_train_list,axis=1)
+            tmpr=tmpr.add_suffix('_'+str(i))
+            X_train.append(tmpr)
+        X_train=pandas.concat(X_train,axis=0)
+        print(X_train)
+        scaler=MinMaxScaler(feature_range=(0,1))
+        scaled_data=scaler.fit_transform(X_train)
+        model=Sequential()
+        model.add(LSTM(units=50,return_sequences=True,input_shape=(X_train.shape[1],1)))
+        model.add(Dropout(0.2))
+        model.add(LSTM(units=50,return_sequences=True))
+        model.add(Dropout(0.2))
+        model.add(LSTM(units=50,return_sequences=True))
+        model.add(Dense(units=1))
+        model.compile(optimizer='adam',loss='mean_squared_error')
+        model.fit(X_train,self.stock,epochs=25,batch_size=32)
+            
                 
             
-
-
 RUI_PA=Stock(name='RUI.PA')
 VPK_AS=Stock(name='VPK.AS')
 BP_L=Stock(name="BP.L")
@@ -61,9 +82,24 @@ XOM.MA()
 
 RUI_PA.derivative_rate()
 VPK_AS.derivative_rate()
-RUI_PA.prediction_NN_black_box(data=VPK_AS)
+BP_L.derivative_rate()
+SHELL_AS.derivative_rate()
+TTE_PA.derivative_rate()
+XOM.derivative_rate()
+
+
+#RUI_PA.prediction_NN_black_box(data=[VPK_AS,BP_L,SHELL_AS,TTE_PA,XOM])
+
 """
 BP_L.derivative_rate()
 SHELL_AS.derivative_rate()
 TTE_PA.derivative_rate()
 XOM.derivative_rate()"""
+
+import pandas_datareader
+
+start=datetime.datetime(2020,1,1)
+end=datetime.datetime(2022,1,1)
+
+data=pandas_datareader.DataReader("MRNA","yahoo",start,end)
+print(data)
