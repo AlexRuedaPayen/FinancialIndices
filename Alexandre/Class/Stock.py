@@ -1,3 +1,7 @@
+import pandas
+import math
+import datetime
+
 class Stock:
 
     def __init__(self,name):

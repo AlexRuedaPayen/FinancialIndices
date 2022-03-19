@@ -1,10 +1,3 @@
-from pickle import FALSE
-import pandas
-import math
-import datetime
-import praw
-import os,paramiko,subprocess
-
 def fun_A():
 
     from Alexandre.Class.Stock import Stock
@@ -31,3 +24,6 @@ def fun_A():
     XOM.derivative_rate()
 
     print(RUI_PA.derivative_rate)
+
+if __name__=='__main__':
+    fun_A()
