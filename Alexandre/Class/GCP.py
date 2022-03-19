@@ -29,19 +29,23 @@ class GCP:
         file_path_destination="~/Projects/Financial_Indices/Alexandre/Class/"
         for i in self.class_:
             file_path_class_origin=file_path_origin+i+".py"
-            file_path_class_destination=file_path_destination#+i+".py" #self.user+"@instance-2:"+
+            file_path_class_destination=file_path_destination
             self.scp.put(file_path_class_origin,file_path_class_destination)
-            print("File "+file_path_class_destination+" created")
+            print("File "+file_path_class_destination+i+".py"+" created")
         return(self)
 
     def run(self,script):
-        file_path_script_origin="./Alexandre/script/"+script+".py"
-        file_path_script_destination="~/Projects/Financial_Indices/Alexandre/script/"+script+".py"
+        file_path_script_origin="./Alexandre/Script/"+script+".py"
+        file_path_script_destination="~/Projects/Financial_Indices/Alexandre/Script/"+script+".py"
         self.scp.put(file_path_script_origin,file_path_script_destination)
-        """self.ssh.exec_command('conda source activate Financial_Indices')
-        self.ssh.exec_command('python3 '+file_path_script_destination)
-        self.scp.get(file_path_script_origin,file_path_script_destination)"""
+        print("File "+file_path_script_destination+" created")
+        self.ssh.exec_command('conda activate')
+        print("Running function "+file_path_script_destination)
+        stdin,stdout,stderr=self.ssh.exec_command('python3.7 '+file_path_script_destination)
+        print("Function "+file_path_script_destination+" done")
+        self.ssh.exec_command('conda deactivate')
+        """self.scp.get(file_path_script_origin,file_path_script_destination)"""
 
 
     def __exit__(self,type, value, traceback):
-        pass
+        self.ssh.close()

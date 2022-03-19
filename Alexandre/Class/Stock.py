@@ -29,6 +29,7 @@ class Stock:
             tmpr=tmpr.add_suffix('_'+str(i))
             tmpr.index=(self.stock.index)[0:(n-2)]
             self.derivative_rate.append(tmpr)
+        print(self.derivative_rate)
 
     def prediction_RNN_black_box(self,data,days_ahead=4):
         X_train_list=[]

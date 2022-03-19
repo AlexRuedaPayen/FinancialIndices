@@ -1,3 +1,7 @@
+import os,sys
+print(os.getcwd())
+sys.path.append("../..")
+
 def fun_A():
 
     from Alexandre.Class.Stock import Stock
@@ -8,6 +12,8 @@ def fun_A():
     SHELL_AS=Stock(name="SHELL.AS")
     TTE_PA=Stock(name="TTE.PA")
     XOM=Stock(name="XOM")
+
+    print('ok')
 
     RUI_PA.MA()
     VPK_AS.MA()
@@ -25,5 +31,4 @@ def fun_A():
 
     print(RUI_PA.derivative_rate)
 
-if __name__=='__main__':
-    fun_A()
+fun_A()
