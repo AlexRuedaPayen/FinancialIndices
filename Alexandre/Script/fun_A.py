@@ -1,6 +1,6 @@
 import os,sys
-print(os.getcwd())
-sys.path.append("../..")
+sys.path.append(os.getcwd())
+#sys.path.append("../..")
 
 def fun_A():
 

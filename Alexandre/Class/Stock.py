@@ -5,7 +5,7 @@ import datetime
 class Stock:
 
     def __init__(self,name):
-        self.stock=pandas.read_csv(filepath_or_buffer='../Data/'+name+'.csv')
+        self.stock=pandas.read_csv(filepath_or_buffer='./Data/'+name+'.csv')
         self.stock.index=self.stock['Date']
         print(f'Data from '+ str(min(self.stock['Date'].values))+' to '+str(max(self.stock['Date'].values)))
     
