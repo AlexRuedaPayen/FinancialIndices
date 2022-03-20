@@ -31,6 +31,11 @@ class Stock:
             self.derivative_rate.append(tmpr)
         print(self.derivative_rate)
 
+    def plot(self):
+        import plotly
+        print(plotly.express.data.stocks())
+
+
     def prediction_RNN_black_box(self,data,days_ahead=4):
         X_train_list=[]
         X_train=[]

@@ -29,4 +29,6 @@ def fun_A():
 
     print(RUI_PA.derivative_rate)
 
+    RUI_PA.plot()
+
 fun_A()
