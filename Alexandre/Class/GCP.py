@@ -1,4 +1,4 @@
-import paramiko,scp
+import paramiko,scp,json
 
 class GCP:
 
@@ -9,8 +9,11 @@ class GCP:
                 class_=["Stock"],
                 data_=["RUI.PA"]):
 
-        self.host=host
-        self.user=user
+        with open('/Users/alexandreprofessional2/Desktop/key/GCP/credentials.json', 'r') as f:
+            credentials = json.load(f)
+
+        self.host=credentials['host']
+        self.user=credentials['user']
         self.class_=class_
 
         from getpass import getpass
@@ -49,3 +52,6 @@ class GCP:
 
     def __exit__(self,type, value, traceback):
         self.ssh.close()
+
+with GCP() as f:
+    pass
