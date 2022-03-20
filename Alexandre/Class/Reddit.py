@@ -90,7 +90,7 @@ class Reddit:
             aad.append(topic)
         
         for i in range(num_topics):
-            self.redit_data["Topic "+str(i+1)]=0
+            self.redit_data["Topic "+str(i+1)]=[0]*self.redit_data.shape[0]
             for j in range(len(aad)):
                 for x in aad[j]:
                     #(self.redit_data).set_value(j,"Topic "+str(x[0]+1), x[1])
@@ -98,6 +98,7 @@ class Reddit:
                     #print((self.redit_data)["Topic "+str(x[0]+1)][j])
                     #print("Topic "+str(x[0]+1),j,x[1])
                     #exit()
+        
 
         import matplotlib.pyplot as plt
         import datetime
@@ -105,9 +106,19 @@ class Reddit:
         self.redit_data
         
         t=(list(map(lambda x:datetime.datetime.fromtimestamp(x),self.redit_data['created_utc'].tolist())))
-        serie=[ self.redit_data['Topic 3'][i]*self.redit_data['score'][i] for i in range(self.redit_data.shape[0]) ]
+        
+        serie=dict()
+        for i in range(num_topics):
+            serie[i]=[ self.redit_data['Topic '+str(i+1)][j]*self.redit_data['score'][j] for j in range(self.redit_data.shape[0]) ]
 
-        plt.plot_date(t,serie,linestyle='solid')
+        import colorsys
+        N = num_topics
+        HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
+        RGB_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))
+
+        for i in range(num_topics):
+            plt.plot_date(t,serie[i],linestyle='solid',color=RGB_tuples[i])
+        
         plt.show()
         
         
@@ -121,4 +132,3 @@ Ukraine=Reddit()
 Ukraine.save()
 Ukraine.topic_model_LDA()
 Ukraine.save()
-
