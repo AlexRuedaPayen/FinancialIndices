@@ -3,8 +3,6 @@ import paramiko,scp,json
 class GCP:
 
     def __init__(self,
-                host="34.68.238.69",
-                user="MacAlexandre_GCP_VM1",
                 keyfile="/Users/alexandreprofessional2/Desktop/key/key_GCP_VM1",
                 class_=["Stock"],
                 data_=["RUI.PA"]):

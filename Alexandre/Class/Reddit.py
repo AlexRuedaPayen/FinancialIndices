@@ -90,20 +90,19 @@ class Reddit:
             aad.append(topic)
         
         for i in range(num_topics):
-            self.redit_data["Topic "+str(i+1)]=[0]*self.redit_data.shape[0]
-            for j in range(len(aad)):
-                for x in aad[j]:
-                    #(self.redit_data).set_value(j,"Topic "+str(x[0]+1), x[1])
-                    (self.redit_data).at[j,"Topic "+str(x[0]+1)]=x[1]
-                    #print((self.redit_data)["Topic "+str(x[0]+1)][j])
-                    #print("Topic "+str(x[0]+1),j,x[1])
-                    #exit()
-        
+            self.redit_data['Topic '+str(i+1)]=[0]*self.redit_data.shape[0]
+
+        for j in range(len(aad)):
+            for x in aad[j]:
+                ind=list(self.redit_data.columns).index('Topic '+str(x[0]+1))
+                print(ind)
+                self.redit_data.iloc[j,ind]=x[1]
+    
 
         import matplotlib.pyplot as plt
         import datetime
 
-        self.redit_data
+        self.redit_data=self.redit_data.sort_values('created_utc')
         
         t=(list(map(lambda x:datetime.datetime.fromtimestamp(x),self.redit_data['created_utc'].tolist())))
         
