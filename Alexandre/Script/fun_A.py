@@ -13,8 +13,6 @@ def fun_A():
     TTE_PA=Stock(name="TTE.PA")
     XOM=Stock(name="XOM")
 
-    print('ok')
-
     RUI_PA.MA()
     VPK_AS.MA()
     BP_L.MA()
