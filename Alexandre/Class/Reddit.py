@@ -64,7 +64,6 @@ class Reddit:
         self.redit_data=pandas.read_csv(filepath_or_buffer='./Data/Reddit/'+name+'.csv',header=True,encoding='utf-8',index=False)
 
     def topic_model_LDA(self,num_topics = 10):
-        
         """
         Original version found on towardsdatascience from Shashank Kapadia
         https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
