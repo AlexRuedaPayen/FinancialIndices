@@ -3,7 +3,17 @@ import gensim
 from gensim.utils import simple_preprocess
 import gensim.corpora as corpora
 import nltk
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
 from pprint import pprint
+from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 #nltk.download('stopwords')
 #from nltk.corpus import stopwords
 
@@ -123,11 +133,20 @@ class Reddit:
         
 
     def sentiment_analysis(self):
-        pass
+        sia=SIA()
+        results=[]
+        for line in self.redit_data['headlines']:
+            print(line)
+            exit()
+            pol_score=sia.polarity_scores(line)
+            pol_score['headline']=line
+            results.append(pol_score)
+        return(pandas.DataFrame.from_records(results))
 
 
 
 Ukraine=Reddit()
-Ukraine.save()
 Ukraine.topic_model_LDA()
+#exit()
+#Ukraine.sentiment_analysis()
 Ukraine.save()
