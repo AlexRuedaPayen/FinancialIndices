@@ -26,6 +26,9 @@ class Reddit:
                 attributes=['headlines','id','author','created_utc','score','upvote_ratio','url']):
         self.user_agent=user
 
+        if (topic=="Ukraine" or topic=="Russia"):
+            print("Слава Україні \nГероям слава")
+
         if topic==None:
             return
 
@@ -105,7 +108,6 @@ class Reddit:
         for j in range(len(aad)):
             for x in aad[j]:
                 ind=list(self.redit_data.columns).index('Topic '+str(x[0]+1))
-                print(ind)
                 self.redit_data.iloc[j,ind]=x[1]
     
 
@@ -136,8 +138,8 @@ class Reddit:
         sia=SIA()
         results=[]
         for line in self.redit_data['headlines']:
-            print(line)
-            exit()
+            #print(line)
+            #exit()
             pol_score=sia.polarity_scores(line)
             pol_score['headline']=line
             results.append(pol_score)
