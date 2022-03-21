@@ -13,9 +13,10 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 from pprint import pprint
+nltk.download('stopwords')
+nltk.download('vader_lexicon')
+from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
-#nltk.download('stopwords')
-#from nltk.corpus import stopwords
 
 class Reddit:
 
@@ -68,8 +69,8 @@ class Reddit:
         Original version found on towardsdatascience from Shashank Kapadia
         https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
         """
-        #stop_words = stopwords.words('english')
-        #stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
+        stop_words = stopwords.words('english')
+        stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 
         def sent_to_words(sentences):
             for sentence in sentences:
@@ -78,12 +79,10 @@ class Reddit:
         def remove_stopwords(texts):
             return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
-        #print(self.redit_data.columns)
         data = self.redit_data['headlines'].tolist()
-        #print(data)
 
         data_words = list(sent_to_words(data))
-        #data_words = remove_stopwords(data_words)
+        data_words = remove_stopwords(data_words)
 
         id2word = corpora.Dictionary(data_words)
         texts = data_words
@@ -106,44 +105,56 @@ class Reddit:
             for x in aad[j]:
                 ind=list(self.redit_data.columns).index('Topic '+str(x[0]+1))
                 self.redit_data.iloc[j,ind]=x[1]
-    
+        
+        
+
+    def sentiment_analysis(self):
+        sia=SIA()
+        self.redit_data['positive']=[0]*self.redit_data.shape[0]
+        self.redit_data['neutral']=[0]*self.redit_data.shape[0]
+        self.redit_data['negative']=[0]*self.redit_data.shape[0]
+        for i in range(self.redit_data.shape[0]):
+            pol_score=sia.polarity_scores(self.redit_data.at[i,'headlines'])
+            ind_pos=list(self.redit_data.columns).index('positive')
+            ind_neu=list(self.redit_data.columns).index('neutral')
+            ind_neg=list(self.redit_data.columns).index('negative')
+            self.redit_data.iloc[i,ind_pos]=pol_score['pos']
+            self.redit_data.iloc[i,ind_neu]=pol_score['neu']
+            self.redit_data.iloc[i,ind_neg]=pol_score['neg']
+
+    def plot(self,Stocks):
 
         import matplotlib.pyplot as plt
         import datetime
 
+        import re
+      
+        num_topics=len(list(filter(lambda x:re.compile(r'Topic').search(x) ,self.redit_data.columns)))
         self.redit_data=self.redit_data.sort_values('created_utc')
         
         t=(list(map(lambda x:datetime.datetime.fromtimestamp(x),self.redit_data['created_utc'].tolist())))
         
         serie=dict()
         for i in range(num_topics):
-            serie[i]=[ self.redit_data['Topic '+str(i+1)][j]*self.redit_data['score'][j] for j in range(self.redit_data.shape[0]) ]
+            serie[i]=[ self.redit_data['Topic '+str(i+1)][j]*self.redit_data['score'][j]*(self.redit_data['positive'][j] -self.redit_data['negative'][j]) for j in range(self.redit_data.shape[0]) ]
 
         import colorsys
-        N = num_topics
+        N = num_topics+len(Stocks)
         HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
         RGB_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))
 
         for i in range(num_topics):
             plt.plot_date(t,serie[i],linestyle='solid',color=RGB_tuples[i])
-        
+        for i in range(len(Stocks)):
+            x=Stocks[i]
+            plt.plot_date(x['Date'],x['Price'],linestyle='solid',color=RGB_tuples[num_topics+i])
+
         plt.show()
-        
-        
-
-    def sentiment_analysis(self):
-        sia=SIA()
-        results=[]
-        for line in self.redit_data['headlines']:
-            pol_score=sia.polarity_scores(line)
-            pol_score['headline']=line
-            results.append(pol_score)
-        return(pandas.DataFrame.from_records(results))
-
 
 
 Ukraine=Reddit()
 Ukraine.topic_model_LDA()
-#exit()
-#Ukraine.sentiment_analysis()
-Ukraine.save()
+Ukraine.sentiment_analysis()
+Ukraine.plot()
+
+print(Ukraine.redit_data)

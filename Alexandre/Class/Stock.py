@@ -4,10 +4,31 @@ import datetime
 
 class Stock:
 
-    def __init__(self,name):
-        self.stock=pandas.read_csv(filepath_or_buffer='./Data/'+name+'.csv')
-        self.stock.index=self.stock['Date']
-        print(f'Data from '+ str(min(self.stock['Date'].values))+' to '+str(max(self.stock['Date'].values)))
+    def __init__(self,name,locally_stored=False,historical=True):
+        if (locally_stored):
+            self.stock=pandas.read_csv(filepath_or_buffer='./Data/'+name+'.csv')
+            self.stock.index=self.stock['Date']
+            print(f'Data from '+ str(min(self.stock['Date'].values))+' to '+str(max(self.stock['Date'].values)))
+        else:
+            if (historical):
+                import requests
+                from bs4 import BeautifulSoup
+                url=('https://uk.finance.yahoo.com/quote/'+name+'/history?p='+name)
+                r=requests.get(url)
+                web_content=BeautifulSoup(r.text,'html')
+                from selenium import webdriver
+            else:
+                """not working yet due to Yahoo failure"""
+                import requests
+                from bs4 import BeautifulSoup
+                url=('https://uk.finance.yahoo.com/quote/'+name)
+                r=requests.get(url)
+                web_content=BeautifulSoup(r.text,'html')
+                print(web_content)
+                web_content=web_content.find('span',{
+                    'class':'D(ib) Fl(end) W(20%) Maw(300px) Cl(end)--mobxl W(250px)--tab768'
+                })
+                print(web_content)
     
     def MA(self,day=7):
         start_date=str(datetime.datetime.strptime(min(self.stock['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
@@ -64,3 +85,7 @@ class Stock:
         model.add(Dense(units=1))
         model.compile(optimizer='adam',loss='mean_squared_error')
         model.fit(X_train,self.stock,epochs=25,batch_size=32)
+
+if __name__=='__main__':
+    Stock('RUI.PA')
+    Stock('SAF.PA')
