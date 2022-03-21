@@ -1,6 +1,7 @@
 import pandas
 import math
 import datetime
+import numpy
 
 class Asset:
 
@@ -39,13 +40,18 @@ class Asset:
                 lowlist.append(val[2].text)
                 closelist.append(val[3].text)
 
+            def float_(x):
+                try:
+                    return(float(x.replace(",","")))
+                except:
+                    return(numpy.nan)
 
             self.stock=pandas.DataFrame({
-                'Date':datelist,
-                'Open':openlist,
-                'Close':closelist,
-                'High':highlist,
-                'Low':lowlist
+                'Date':[x for x in datelist],
+                'Open':[float_(x) for x in openlist],
+                'Close':[float_(x) for x in closelist],
+                'High':[float_(x) for x in highlist],
+                'Low':[float_(x) for x in lowlist]
             })
 
     def work_onlive(self,duration=360,interval=6):
@@ -85,6 +91,50 @@ class Asset:
             tmpr.index=(self.stock.index)[0:(n-2)]
             self.derivative_rate.append(tmpr)
         print(self.derivative_rate)
+
+    def normalize_date(self,Assets):
+        init_val_asset_denominator=self.stock.iloc[self.stock.shape[0]-1,1]
+        self.assets_normize=dict()
+        for key,asset in Assets.items():
+            init_val_numerator=asset.stock.iloc[asset.stock.shape[0]-1,1]
+            quot=init_val_asset_denominator/init_val_numerator
+            tmpr=asset.stock
+            tmpr['Open']=[x*(quot) for x in asset.stock['Open']]
+            tmpr['Close']=[x*(quot) for x in asset.stock['Close']]
+            tmpr['High']=[x*(quot) for x in asset.stock['High']]
+            tmpr['Low']=[x*(quot) for x in asset.stock['Low']]
+            self.assets_normize[key]=tmpr
+        
+
+    def plot_price(self):
+
+        import matplotlib.pyplot as plt
+        import datetime
+        import re
+
+        self.stock['Date'] = pandas.to_datetime(self.stock['Date']).dt.date
+        self.stock=self.stock.sort_values('Date')
+        t=self.stock['Date']
+        
+        Assets=self.assets_normize
+        
+        import colorsys
+        N = len(Assets.keys())+1
+        HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
+        RGB_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))
+
+        plt.plot_date(t,self.stock['Open'],linestyle='solid',color=RGB_tuples[0])
+        i=0
+        
+        for key,value in Assets.items():
+            i+=1
+            value['Date'] = pandas.to_datetime(value['Date']).dt.date
+            value=value.sort_values('Date')
+            value.ffill(inplace=True)
+         
+            plt.plot_date(t,value['Open'],linestyle='solid',color=RGB_tuples[i])
+
+        plt.show()
 
     def prediction_RNN_black_box(self,data,days_ahead=4):
         X_train_list=[]
@@ -126,7 +176,26 @@ if __name__=='__main__':
     print(Wheat.stock)
     print(Brent.stock)
 
+    Rubis.derivative_rate()
+    Safran.derivative_rate()
+    Wheat.derivative_rate()
+    Brent.derivative_rate()
+
+    print(Rubis.derivative_rate)
+    print(Safran.derivative_rate)
+    print(Wheat.derivative_rate)
+    print(Brent.derivative_rate)
+
     Rubis.save()
     Safran.save()
     Wheat.save()
     Brent.save()
+
+    Rubis.normalize_date({
+        'Safran':Safran,
+        'Wheat':Wheat,
+        'Brent':Brent
+    })
+    Rubis.plot_price()
+
+    print(a)
