@@ -2,7 +2,11 @@ import pandas
 import math
 import datetime
 import numpy
-import tensorflow
+#import tensorflow
+
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
 """from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Sequential,load_model
 from tensorflow.keras.layers import LSTM,Dense,Dropout"""
@@ -25,10 +29,6 @@ class Asset:
             openlist=[]
             closelist=[]
 
-            import requests
-            from bs4 import BeautifulSoup
-            from selenium import webdriver
-
             url=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
             r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
             web_content=BeautifulSoup(r.text,'html')
@@ -37,12 +37,26 @@ class Asset:
             web_content=web_content.find_all('tr',{'class':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)'})
 
             for x in web_content:
-                datelist.append(x.find('td',{'class':'Py(10px) Ta(start) Pend(10px)'}).text)
+                date=x.find('td',{'class':'Py(10px) Ta(start) Pend(10px)'})
                 val=x.find_all('td',{'class':'Py(10px) Pstart(10px)'})
-                openlist.append(val[0].text)
-                highlist.append(val[1].text)
-                lowlist.append(val[2].text)
-                closelist.append(val[3].text)
+
+                if (val==None or len(val)<4):
+                    continue
+
+                open=val[0]
+                high=val[1]
+                low=val[2]
+                close=val[3]
+                
+                if (date==None or open==None or high==None or low==None or close==None):
+                    continue
+
+                datelist.append(date.text)
+                
+                openlist.append(open.text)
+                highlist.append(high.text)
+                lowlist.append(low.text)
+                closelist.append(close.text)
 
             def float_(x):
                 try:
@@ -59,8 +73,6 @@ class Asset:
             })
 
     def work_onlive(self,duration=360,interval=6):
-        import requests
-        from bs4 import BeautifulSoup
 
         url=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
         r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
@@ -70,34 +82,51 @@ class Asset:
         web_content=web_content.find('span',{'class':'_11248a25 _8e5a1db9'})
         print(web_content)
 
-    def scrap_press_releases(self,website='Euronext'):
-        import requests
-        from bs4 import BeautifulSoup
-        from selenium import webdriver
+    def scrap_infos(self,website='Yahoo',type='News'):
 
-        url=('https://uk.finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
-        r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-        web_content=BeautifulSoup(r.text,'html')
-        web_content=web_content.find_all('li',{'class':'js-stream-content Pos(r)'})
-        date_list=[]
-        headline_list=[]
-        pressrelease_list=[]
+        if website=='Yahoo':
 
-        for x in web_content:
-            date=x.find('div',{'class':'C(#959595) Fz(11px) D(ib) Mb(6px)'})
-            headline=x.find('h3',{'class':'Mb(5px)'})
-            pressrelease=x.find('p',{'class':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'})
-            if (date==None or headline==None or pressrelease==None):
-                continue
-            date_list.append(date.getText())
-            headline_list.append(headline.getText())
-            pressrelease_list.append(pressrelease.getText())
+            url_news=('https://finance.yahoo.com/quote/'+self.name+'/news?p='+self.name)
+            url_press_releases=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
 
-        self.press_releases=pandas.DataFrame({
-                'Date':[x for x in date_list],
-                'Headline':[x for x in headline_list],
-                'Press_realese':[x for x in pressrelease_list]
-            })
+            def fill_up(url):
+                r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+                web_content=BeautifulSoup(r.text,'html')
+                web_content=web_content.find_all('div',{'class':'Ov(h) Pend(14%) Pend(44px)--sm1024'})
+                date_list=[]
+                headline_list=[]
+                text_list=[]
+
+                for x in web_content:
+                    date=x.find('div',{'class':'C(#959595) Fz(11px) D(ib) Mb(6px)'})
+                    headline=x.find('h3',{'class':'Mb(5px)'})
+                    text=x.find('p',{'class':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'})
+                    if (date==None or headline==None or text==None):
+                        continue
+                    date_list.append(date.getText())
+                    headline_list.append(headline.getText())
+                    text_list.append(text.getText())
+
+                return(pandas.DataFrame({
+                        'Date':[x for x in date_list],
+                        'Headline':[x for x in headline_list],
+                        'Text':[x for x in text_list]
+                    }))
+            self.news=fill_up(url_news)
+            self.press_releases=fill_up(url_press_releases)
+        """
+        if website=='Euronext':
+            def get_isin(name):
+                pass
+            ISIN=get_isin(self.name)
+            url=('https://live.euronext.com/fr/product/equities/'+ISIN+'-XPAR#notices')
+            url=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
+            r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+            web_content=BeautifulSoup(r.text,'html')
+            web_content=web_content.find('use',{'xlink:href':'/themes/custom/euronext_live/frontend-library/public/assets//spritemap.svg#more-details'})
+            webdriver.find_element_by_css_selector('web_content').click()"""
+            
+
 
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
@@ -168,12 +197,10 @@ class Asset:
             value.ffill(inplace=True)
             labels.append(key)
             plt.plot_date(t,value['Open'],linestyle='solid',color=RGB_tuples[i])
-
-
-        
+  
         plt.legend(labels, ncol=2)
+        plt.savefig('./Data/Asset/fig/plot_'+name+'.png')
 
-        #plt.show()
 
     def prediction_RNN_black_box(self,days_ahead=4):
         X_train_list=[]
@@ -200,19 +227,41 @@ class Asset:
         model.fit(X_train,self.stock,epochs=25,batch_size=32)
 
 if __name__=='__main__':
+
     Rubis=Asset('RUI.PA')
-    Rubis.scrap_press_releases()
+    Rubis.scrap_infos()
 
     Safran=Asset('SAF.PA')
-    Safran.scrap_press_releases()
+    Safran.scrap_infos()
+
+    EDF=Asset('EDF.PA')
+    EDF.scrap_infos()
+
+    Wheat=Asset('ZW%3DF')
+    Wheat.scrap_infos()
+
+    Brent=Asset('BZ%3DF')
+    Brent.scrap_infos()
+
 
     print(Safran.stock)
+    print(EDF.stock)
 
     print(Rubis.press_releases)
     print(Safran.press_releases)
+    print(EDF.press_releases)
+    print(Wheat.press_releases)
+    print(Brent.press_releases)
+
+    print(Rubis.news)
+    print(Safran.news)
+    print(EDF.news)
+    print(Wheat.news)
+    print(Brent.news)
+    
+
     """Safran=Asset('SAF.PA')
-    Wheat=Asset('ZW%3DF')
-    Brent=Asset('BZ%3DF')
+   
 
     Rubis.derivative_rate()
     Safran.derivative_rate()
@@ -222,7 +271,7 @@ if __name__=='__main__':
     Rubis.save()
     Safran.save()
     Wheat.save()
-    Brent.save()
+    Brent.save()"""
 
     Rubis.normalize_date({
         'Safran':Safran,
@@ -230,5 +279,5 @@ if __name__=='__main__':
         'Brent':Brent
     })
     Rubis.plot_price()
-    Rubis.prediction_RNN_black_box()
-    #Rubis.shapley_value()"""
+    #Rubis.prediction_RNN_black_box()
+    #Rubis.shapley_value()
