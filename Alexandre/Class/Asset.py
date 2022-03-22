@@ -2,6 +2,10 @@ import pandas
 import math
 import datetime
 import numpy
+import tensorflow
+"""from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.layers import Sequential,load_model
+from tensorflow.keras.layers import LSTM,Dense,Dropout"""
 
 class Asset:
 
@@ -66,6 +70,35 @@ class Asset:
         web_content=web_content.find('span',{'class':'_11248a25 _8e5a1db9'})
         print(web_content)
 
+    def scrap_press_releases(self,website='Euronext'):
+        import requests
+        from bs4 import BeautifulSoup
+        from selenium import webdriver
+
+        url=('https://uk.finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
+        r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        web_content=BeautifulSoup(r.text,'html')
+        web_content=web_content.find_all('li',{'class':'js-stream-content Pos(r)'})
+        date_list=[]
+        headline_list=[]
+        pressrelease_list=[]
+
+        for x in web_content:
+            date=x.find('div',{'class':'C(#959595) Fz(11px) D(ib) Mb(6px)'})
+            headline=x.find('h3',{'class':'Mb(5px)'})
+            pressrelease=x.find('p',{'class':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'})
+            if (date==None or headline==None or pressrelease==None):
+                continue
+            date_list.append(date.getText())
+            headline_list.append(headline.getText())
+            pressrelease_list.append(pressrelease.getText())
+
+        self.press_releases=pandas.DataFrame({
+                'Date':[x for x in date_list],
+                'Headline':[x for x in headline_list],
+                'Press_realese':[x for x in pressrelease_list]
+            })
+
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
         self.stock.to_csv('./Data/Asset/'+name+'.csv',header=True,encoding='utf-8',index=False)
@@ -90,7 +123,6 @@ class Asset:
             tmpr=tmpr.add_suffix('_'+str(i))
             tmpr.index=(self.stock.index)[0:(n-2)]
             self.derivative_rate.append(tmpr)
-        print(self.derivative_rate)
 
     def normalize_date(self,Assets):
         init_val_asset_denominator=self.stock.iloc[self.stock.shape[0]-1,1]
@@ -125,38 +157,40 @@ class Asset:
 
         plt.plot_date(t,self.stock['Open'],linestyle='solid',color=RGB_tuples[0])
         i=0
+
+        name=[n for n,v in globals().items() if v == self][0]
+        labels=[name]
         
         for key,value in Assets.items():
             i+=1
             value['Date'] = pandas.to_datetime(value['Date']).dt.date
             value=value.sort_values('Date')
             value.ffill(inplace=True)
-         
+            labels.append(key)
             plt.plot_date(t,value['Open'],linestyle='solid',color=RGB_tuples[i])
 
-        plt.show()
 
-    def prediction_RNN_black_box(self,data,days_ahead=4):
+        
+        plt.legend(labels, ncol=2)
+
+        #plt.show()
+
+    def prediction_RNN_black_box(self,days_ahead=4):
         X_train_list=[]
         X_train=[]
         i=0
-        for stock in data:
-            i+=1
-            n=stock.stock.shape[0]
-            X_train_list.append(stock.stock.iloc[0:(n-6),])
-            for derivative in stock.derivative_rate:
-                n=derivative.shape[0]
-                print(derivative)
-                X_train_list.append(derivative.iloc[0:(n-6),])
-                tmpr=pandas.concat(X_train_list,axis=1)
-            tmpr=tmpr.add_suffix('_'+str(i))
-            X_train.append(tmpr)
-        X_train=pandas.concat(X_train,axis=0)
+        for key,values in self.assets_normize.items():
+            values.index=values["Date"].tolist()
+            values=values.drop("Date",axis=1)
+            values=values.add_suffix('_'+key)
+            X_train_list.append(values)   
+        X_train=pandas.concat(X_train_list,axis=1)
         print(X_train)
         scaler=MinMaxScaler(feature_range=(0,1))
         scaled_data=scaler.fit_transform(X_train)
+        print(scaled_data)
         model=Sequential()
-        model.add(LSTM(units=50,return_sequences=True,input_shape=(X_train.shape[1],1)))
+        model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_data.shape[1],1)))
         model.add(Dropout(0.2))
         model.add(LSTM(units=50,return_sequences=True))
         model.add(Dropout(0.2))
@@ -167,24 +201,23 @@ class Asset:
 
 if __name__=='__main__':
     Rubis=Asset('RUI.PA')
+    Rubis.scrap_press_releases()
+
     Safran=Asset('SAF.PA')
+    Safran.scrap_press_releases()
+
+    print(Safran.stock)
+
+    print(Rubis.press_releases)
+    print(Safran.press_releases)
+    """Safran=Asset('SAF.PA')
     Wheat=Asset('ZW%3DF')
     Brent=Asset('BZ%3DF')
-
-    print(Rubis.stock)
-    print(Safran.stock)
-    print(Wheat.stock)
-    print(Brent.stock)
 
     Rubis.derivative_rate()
     Safran.derivative_rate()
     Wheat.derivative_rate()
     Brent.derivative_rate()
-
-    print(Rubis.derivative_rate)
-    print(Safran.derivative_rate)
-    print(Wheat.derivative_rate)
-    print(Brent.derivative_rate)
 
     Rubis.save()
     Safran.save()
@@ -197,5 +230,5 @@ if __name__=='__main__':
         'Brent':Brent
     })
     Rubis.plot_price()
-
-    print(a)
+    Rubis.prediction_RNN_black_box()
+    #Rubis.shapley_value()"""
