@@ -4,9 +4,6 @@ import datetime
 import numpy
 #import tensorflow
 
-import requests
-from bs4 import BeautifulSoup
-from selenium import webdriver
 """from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Sequential,load_model
 from tensorflow.keras.layers import LSTM,Dense,Dropout"""
@@ -52,7 +49,6 @@ class Asset:
                     continue
 
                 datelist.append(date.text)
-                
                 openlist.append(open.text)
                 highlist.append(high.text)
                 lowlist.append(low.text)
@@ -82,7 +78,26 @@ class Asset:
         web_content=web_content.find('span',{'class':'_11248a25 _8e5a1db9'})
         print(web_content)
 
-    def scrap_infos(self,website='Yahoo'):
+    def scrap_infos(self,website='FMP'):
+
+
+        if website=='FMP':
+
+            url_news=('https://site.financialmodelingprep.com/historical-data/'+self.name)
+            scheme={
+                    'a': {
+                        'class_': 'article-item', 
+                        'row': {
+                            'h5': {'class_': 'article-date'},
+                            'h4': {'class_': 'article-title'},
+                            'p': {'class_': 'article-text'}
+                        }
+                }
+            }
+            
+            self.financial=fill_table2(url=url_news,scheme=scheme)
+            
+
 
         if website=='Yahoo':
 
@@ -90,73 +105,28 @@ class Asset:
             url_press_releases=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
             url_financials=('https://finance.yahoo.com/quote/'+self.name+'/financials?p='+self.name)
 
-            def fill_table(url):
-                r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-                web_content=BeautifulSoup(r.text,'html')
-                web_content=web_content.find_all('div', class_='D(tbr)')
-                headers = []
-                df_list = []
-                row = []
-                for x in web_content[0].find_all('div', class_='D(ib)'):
-                    headers.append(x.text)
-                for x in web_content[1:]:
-                    x_val = x.find_all('div', class_='D(tbc)')
-                    for y in x_val:
-                        y_text=(''.join([z.replace(",","") for z in y.text]))
-                        row.append(y_text)
-                    df_list.append(row)
-                    row = []
-                df=pandas.DataFrame(df_list)
-                df.fillna('-')
-                df.columns = headers
-                return(df)
 
-
-            def fill_boxes(url):
-                r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-                web_content=BeautifulSoup(r.text,'html')
-                web_content=web_content.find_all('div',{'class':'Ov(h) Pend(14%) Pend(44px)--sm1024'})
-                date_list=[]
-                headline_list=[]
-                text_list=[]
-
-                for x in web_content:
-                    date=x.find('div',{'class':'C(#959595) Fz(11px) D(ib) Mb(6px)'})
-                    headline=x.find('h3',{'class':'Mb(5px)'})
-                    text=x.find('p',{'class':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'})
-                    if (date==None or headline==None or text==None):
-                        continue
-                    date_list.append(date.getText())
-                    headline_list.append(headline.getText())
-                    text_list.append(text.getText())
-
-                return(pandas.DataFrame({
-                        'Source':[x for x in date_list],
-                        'Headline':[x for x in headline_list],
-                        'Text':[x for x in text_list]
-                    }))
+            scheme={
+                'div':{
+                    'class_':'D(tbr)',
+                    'row':{
+                        'div':'D(tbc)'
+                    }
+                }
+            }
             self.news=fill_boxes(url_news)
             self.press_releases=fill_boxes(url_press_releases)
             self.financial=fill_table(url_financials)
 
-            
-        """
-        if website=='Euronext':
-            def get_isin(name):
-                pass
-            ISIN=get_isin(self.name)
-            url=('https://live.euronext.com/fr/product/equities/'+ISIN+'-XPAR#notices')
-            url=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
-            r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-            web_content=BeautifulSoup(r.text,'html')
-            web_content=web_content.find('use',{'xlink:href':'/themes/custom/euronext_live/frontend-library/public/assets//spritemap.svg#more-details'})
-            webdriver.find_element_by_css_selector('web_content').click()"""
-            
+
 
 
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.stock.to_csv('./Data/Asset/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.stock.to_csv('./Data/Asset/'+name+'.stock..csv',header=True,encoding='utf-8',index=False)
+        self.news.to_csv('./Data/Asset/'+name+'.news.csv',header=True,encoding='utf-8',index=False)
+        self.press_releases.to_csv('./Data/Asset/'+name+'.press_releases.csv',header=True,encoding='utf-8',index=False)
+        self.financial.to_csv('./Data/Asset/'+name+'.financial.csv',header=True,encoding='utf-8',index=False)
     
     def MA(self,day=7):
         start_date=str(datetime.datetime.strptime(min(self.stock['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
@@ -264,10 +234,10 @@ if __name__=='__main__':
     EDF.scrap_infos()
 
     Wheat=Asset('ZW%3DF')
-    #Wheat.scrap_infos()
+    Wheat.scrap_infos()
 
     Brent=Asset('BZ%3DF')
-    #Brent.scrap_infos()
+    Brent.scrap_infos()
 
 
     print(Safran.stock)
