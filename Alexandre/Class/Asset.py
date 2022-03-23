@@ -82,14 +82,37 @@ class Asset:
         web_content=web_content.find('span',{'class':'_11248a25 _8e5a1db9'})
         print(web_content)
 
-    def scrap_infos(self,website='Yahoo',type='News'):
+    def scrap_infos(self,website='Yahoo'):
 
         if website=='Yahoo':
 
             url_news=('https://finance.yahoo.com/quote/'+self.name+'/news?p='+self.name)
             url_press_releases=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
+            url_financials=('https://finance.yahoo.com/quote/'+self.name+'/financials?p='+self.name)
 
-            def fill_up(url):
+            def fill_table(url):
+                r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+                web_content=BeautifulSoup(r.text,'html')
+                web_content=web_content.find_all('div', class_='D(tbr)')
+                headers = []
+                df_list = []
+                row = []
+                for x in web_content[0].find_all('div', class_='D(ib)'):
+                    headers.append(x.text)
+                for x in web_content[1:]:
+                    x_val = x.find_all('div', class_='D(tbc)')
+                    for y in x_val:
+                        y_text=(''.join([z.replace(",","") for z in y.text]))
+                        row.append(y_text)
+                    df_list.append(row)
+                    row = []
+                df=pandas.DataFrame(df_list)
+                df.fillna('-')
+                df.columns = headers
+                return(df)
+
+
+            def fill_boxes(url):
                 r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
                 web_content=BeautifulSoup(r.text,'html')
                 web_content=web_content.find_all('div',{'class':'Ov(h) Pend(14%) Pend(44px)--sm1024'})
@@ -108,12 +131,15 @@ class Asset:
                     text_list.append(text.getText())
 
                 return(pandas.DataFrame({
-                        'Date':[x for x in date_list],
+                        'Source':[x for x in date_list],
                         'Headline':[x for x in headline_list],
                         'Text':[x for x in text_list]
                     }))
-            self.news=fill_up(url_news)
-            self.press_releases=fill_up(url_press_releases)
+            self.news=fill_boxes(url_news)
+            self.press_releases=fill_boxes(url_press_releases)
+            self.financial=fill_table(url_financials)
+
+            
         """
         if website=='Euronext':
             def get_isin(name):
@@ -238,10 +264,10 @@ if __name__=='__main__':
     EDF.scrap_infos()
 
     Wheat=Asset('ZW%3DF')
-    Wheat.scrap_infos()
+    #Wheat.scrap_infos()
 
     Brent=Asset('BZ%3DF')
-    Brent.scrap_infos()
+    #Brent.scrap_infos()
 
 
     print(Safran.stock)
@@ -250,15 +276,18 @@ if __name__=='__main__':
     print(Rubis.press_releases)
     print(Safran.press_releases)
     print(EDF.press_releases)
-    print(Wheat.press_releases)
-    print(Brent.press_releases)
+    #print(Wheat.press_releases)
+    #print(Brent.press_releases)
 
-    print(Rubis.news)
+    """print(Rubis.news)
     print(Safran.news)
     print(EDF.news)
     print(Wheat.news)
-    print(Brent.news)
+    print(Brent.news)"""
     
+    print(Rubis.financial)
+    print(Safran.financial)
+    print(EDF.financial)
 
     """Safran=Asset('SAF.PA')
    
