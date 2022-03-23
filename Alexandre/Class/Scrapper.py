@@ -6,14 +6,12 @@ from selenium import webdriver
 
 class Scrapper:
 
-    def __init__(self,scheme,header):
+    def __init__(self,scheme,header,type):
 
         assert(type(header) is dict)
         assert(type(scheme) is dict)
         assert(list(scheme.keys()) in set(['a','div','p']))
         assert(type(scheme.values()) is dict or type(scheme.values) is str)
-
-        print('okay')
 
         for i in scheme.values():
             if (i is dict):
@@ -28,6 +26,7 @@ class Scrapper:
     
         self.scheme=scheme
         self.header=header
+        self.type=type
 
     def fill_table(self,url,header=True):
         scheme=self.scheme
@@ -71,10 +70,10 @@ class Scrapper:
                 df_tmpr=pandas.DataFrame(df_list)
                 df.append(df_tmpr)
 
-    def __call__(self,type,url):
-        if (type=='box'):
+    def __call__(self,url):
+        if (self.type=='box'):
             return(self.fill_boxes(url))
-        if (type=='table'):
+        if (self.type=='table'):
             return(self.fill_table(url))
 
 if __name__=='__main__':

@@ -2,6 +2,9 @@ import pandas
 import math
 import datetime
 import numpy
+import Scrapper
+header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
+
 #import tensorflow
 
 """from sklearn.preprocessing import MinMaxScaler
@@ -20,66 +23,23 @@ class Asset:
             print(f'Data from '+ str(min(self.stock['Date'].values))+' to '+str(max(self.stock['Date'].values)))
 
         else:
-            datelist=[] 
-            lowlist=[]
-            highlist=[]
-            openlist=[]
-            closelist=[]
+            
+            scheme={
+                'tr':{
+                    'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
+                    'row':{
+                        'td':{'class_':'Py(10px)'}
+                    }
+                }
+            }
 
             url=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
-            r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-            web_content=BeautifulSoup(r.text,'html')
-            
-            web_content=web_content.find('div',{'class':'Pb(10px) Ovx(a) W(100%)'})
-            web_content=web_content.find_all('tr',{'class':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)'})
-
-            for x in web_content:
-                date=x.find('td',{'class':'Py(10px) Ta(start) Pend(10px)'})
-                val=x.find_all('td',{'class':'Py(10px) Pstart(10px)'})
-
-                if (val==None or len(val)<4):
-                    continue
-
-                open=val[0]
-                high=val[1]
-                low=val[2]
-                close=val[3]
-                
-                if (date==None or open==None or high==None or low==None or close==None):
-                    continue
-
-                datelist.append(date.text)
-                openlist.append(open.text)
-                highlist.append(high.text)
-                lowlist.append(low.text)
-                closelist.append(close.text)
-
-            def float_(x):
-                try:
-                    return(float(x.replace(",","")))
-                except:
-                    return(numpy.nan)
-
-            self.stock=pandas.DataFrame({
-                'Date':[x for x in datelist],
-                'Open':[float_(x) for x in openlist],
-                'Close':[float_(x) for x in closelist],
-                'High':[float_(x) for x in highlist],
-                'Low':[float_(x) for x in lowlist]
-            })
-
-    def work_onlive(self,duration=360,interval=6):
-
-        url=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
-        r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+            Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='table')
+            self.financial=Scrapper_Press_Releases(url=url)
         
-        web_content=BeautifulSoup(r.text,'html')
-        web_content=web_content.find('div',{'class':'D(ib) Mend(20px)'})
-        web_content=web_content.find('span',{'class':'_11248a25 _8e5a1db9'})
-        print(web_content)
+
 
     def scrap_infos(self,website='FMP'):
-
 
         if website=='FMP':
 
@@ -94,8 +54,8 @@ class Asset:
                         }
                 }
             }
-            
-            self.financial=fill_table2(url=url_news,scheme=scheme)
+            Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='table')
+            self.financial=Scrapper_Press_Releases(url=url_news)
             
 
 
@@ -114,9 +74,10 @@ class Asset:
                     }
                 }
             }
-            self.news=fill_boxes(url_news)
-            self.press_releases=fill_boxes(url_press_releases)
-            self.financial=fill_table(url_financials)
+            Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='table')
+            self.financial=Scrapper_Press_Releases(url=url_news)
+            self.financial=Scrapper_Press_Releases(url=url_press_releases)
+            self.financial=Scrapper_Press_Releases(url=url_financials)
 
 
 
