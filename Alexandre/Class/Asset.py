@@ -75,8 +75,8 @@ class Asset:
                 }
             }
             Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='table')
-            self.financial=Scrapper_Press_Releases(url=url_news)
-            self.financial=Scrapper_Press_Releases(url=url_press_releases)
+            self.news=Scrapper_Press_Releases(url=url_news)
+            self.press_releases=Scrapper_Press_Releases(url=url_press_releases)
             self.financial=Scrapper_Press_Releases(url=url_financials)
 
 
@@ -238,6 +238,7 @@ if __name__=='__main__':
         'Wheat':Wheat,
         'Brent':Brent
     })
+    
     Rubis.plot_price()
     #Rubis.prediction_RNN_black_box()
     #Rubis.shapley_value()

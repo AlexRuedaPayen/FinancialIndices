@@ -8,7 +8,7 @@ class Scrapper:
 
     def __init__(self,scheme,header,type):
 
-        assert(type(header) is dict)
+        """assert(type(header) is dict)
         assert(type(scheme) is dict)
         assert(list(scheme.keys()) in set(['a','div','p']))
         assert(type(scheme.values()) is dict or type(scheme.values) is str)
@@ -22,7 +22,7 @@ class Scrapper:
                 assert(type(i['row'].values()) is dict)
                 for j in i['row'].values():
                     assert(j.keys() in set(['class_']))
-                    assert(type(j.values()) is str)
+                    assert(type(j.values()) is str)"""
     
         self.scheme=scheme
         self.header=header
@@ -80,7 +80,7 @@ if __name__=='__main__':
 
     header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
 
-    scheme={
+    """scheme={
                 'a': {
                     'class_': 'article-item', 
                     'row': {
@@ -94,9 +94,9 @@ if __name__=='__main__':
     url='https://site.financialmodelingprep.com/historical-data/'+'EDF.PA'
 
     Scrapper_EDF=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_EDF(tye='table',url=url))
+    print(Scrapper_EDF(tye='table',url=url))"""
 
-    scheme={
+    """scheme={
                 'div':{
                     'class_':'D(tbr)',
                     'row':{
@@ -107,8 +107,8 @@ if __name__=='__main__':
     
     url='https://finance.yahoo.com/quote/EDF.PA/financials?p=EDF.PA'
 
-    Scrapper_Financials=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_Financials(type='table',url=url))
+    Scrapper_Financials=Scrapper(scheme=scheme,header=header,type='table')
+    print(Scrapper_Financials(url=url))"""
 
     scheme={
         'tr':{
@@ -121,10 +121,10 @@ if __name__=='__main__':
 
     url=('https://uk.finance.yahoo.com/quote/EDF.PA/history?p=EDF.PA')
 
-    Scrapper_History=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_History(type='table',url=url))
+    Scrapper_History=Scrapper(scheme=scheme,header=header,type='table')
+    print(Scrapper_History(url=url))
 
-    url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
+    """url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
 
     scheme={
         'div':{
@@ -138,4 +138,4 @@ if __name__=='__main__':
     }
 
     Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(type='box',url=url)
+    print(Scrapper_Press_Releases(type='box',url=url)"""

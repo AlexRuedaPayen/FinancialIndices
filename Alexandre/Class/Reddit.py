@@ -126,5 +126,6 @@ if __name__=='__main__':
     Ukraine=Reddit()
     Ukraine.topic_model_LDA()
     Ukraine.sentiment_analysis()
+    Ukraine.save()
 
     print(Ukraine.redit_data)
