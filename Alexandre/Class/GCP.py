@@ -4,7 +4,7 @@ class GCP:
 
     def __init__(self,
                 keyfile="/Users/alexandreprofessional2/Desktop/key/key_GCP_VM1",
-                class_=["Stock"],
+                class_=["Asset"],
                 data_=["RUI.PA"]):
 
         with open('/Users/alexandreprofessional2/Desktop/key/GCP/credentials.json', 'r') as f:
@@ -20,7 +20,7 @@ class GCP:
         ssh = paramiko.SSHClient()
         k = paramiko.RSAKey.from_private_key_file(keyfile,password=password)
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname=host, username=user, pkey=k)
+        ssh.connect(hostname=self.host, username=self.user, pkey=k)
 
         self.ssh=ssh 
         self.scp=scp.SCPClient(self.ssh.get_transport())
@@ -52,4 +52,4 @@ class GCP:
         self.ssh.close()
 
 with GCP() as f:
-    pass
+    f.run("fun_A")

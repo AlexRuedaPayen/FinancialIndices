@@ -31,4 +31,5 @@ def fun_A():
 
     RUI_PA.plot()
 
-fun_A()
+if __name__=='__main__':
+    fun_A()
