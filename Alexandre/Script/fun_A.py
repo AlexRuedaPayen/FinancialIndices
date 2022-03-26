@@ -1,12 +1,10 @@
 import os,sys
 sys.path.append(os.getcwd())
-#sys.path.append("../..")
 
 def fun_A():
+    pass
 
-    from Alexandre.Class.history import history
-
-    RUI_PA=history(name='RUI.PA')
+    """RUI_PA=history(name='RUI.PA')
     VPK_AS=history(name='VPK.AS')
     BP_L=history(name="BP.L")
     SHELL_AS=history(name="SHELL.AS")
@@ -29,7 +27,7 @@ def fun_A():
 
     print(RUI_PA.derivative_rate)
 
-    RUI_PA.plot()
+    RUI_PA.plot()"""
 
 if __name__=='__main__':
     fun_A()

@@ -12,8 +12,8 @@ header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebK
 #import tensorflow
 
 """from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.layers import Sequential,load_model
-from tensorflow.keras.layers import LSTM,Dense,Dropout"""
+from tensorflow.contrib.keras.models import Sequential,load_model
+from tensorflow.contrib.keras.models import LSTM,Dense,Dropout"""
 
 class Asset:
 

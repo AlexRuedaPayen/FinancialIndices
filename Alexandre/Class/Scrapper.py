@@ -40,16 +40,34 @@ class Scrapper:
             df_list=[]
             row_=[]
             colname=[]
-            for name in web_content_key1[0]:
-                colname.append(name)
             for row in web_content_key1[header:]:
                 for key2,value2 in value1['row'].items():
                     x_val=row.find_all(key2, class_=value2['class_'])
                     for y in x_val:
                         y_text=(''.join([z.replace(",","") for z in y.text]))
+                        row_.append(y_text)
                     df_list.append(row_)
                     row_=[]
             df_tmpr=pandas.DataFrame(df_list)
+            if header:
+                header_=list(value1['header'].keys())[0]
+                class__=value1['header'][header_]['class_']
+                print(header_,class__)
+                for name in web_content_key1[0].find_all(header_,class_=class__):
+                    colname.append(name.text)
+                df_tmpr.columns=colname
+            else :
+                header_=list(value1['header'].keys())
+                print(header_)
+                class__=[(h,v) for h in header_ for k,v in value1['header'][h].items() ]
+                print(class__)
+                for h,v in class__:
+                    name=row.find_all(h,class_=v)
+                    colname=colname+[n.text for n in name]
+                if (len(colname)==df_tmpr.shape[1]):
+                    df_tmpr.columns=colname
+                else:
+                    print('Error entering header parameters')
             df.append(df_tmpr)
         return(df)    
 
@@ -82,16 +100,19 @@ class Scrapper:
         return(df)   
 
 
-    def __call__(self,url):
+    def __call__(self,url,header=False):
         if (self.type=='box'):
-            return(self.fill_boxes(url))
+            return(self.fill_boxes(url,header))
         if (self.type=='table'):
-            return(self.fill_table(url))
+            return(self.fill_table(url,header))
 
 
 
 scheme_financial_Yahoo={
     'div':{
+        'header':{
+            'div':{'class_':'D(ib)'}
+        },
         'class_':'D(tbr)',
         'row':{
             'div':{'class_':'D(tbc)'}
@@ -128,6 +149,9 @@ if __name__=='__main__':
 
     scheme={
                 'div':{
+                    'header':{
+                        'div':{'class_':'D(ib)'}
+                    },
                     'class_':'D(tbr)',
                     'row':{
                         'div':{'class_':'D(tbc)'}
@@ -138,10 +162,17 @@ if __name__=='__main__':
     url='https://finance.yahoo.com/quote/EDF.PA/financials?p=EDF.PA'
 
     Scrapper_Financials=Scrapper(scheme=scheme,header=header,type='table')
-    print(Scrapper_Financials(url=url))
-    
+    print(Scrapper_Financials(url=url,header=True))
+
+    print("___________-")
     scheme={
         'tr':{
+            'header':{
+                'th':{
+                    'class1':'C($tertiaryColor) Fz(xs) Ta(end)',
+                    'class2':'Fw(400) Py(6px)'
+                }
+            },
             'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
             'row':{
                 'td':{'class_':'Py(10px)'}
@@ -152,8 +183,9 @@ if __name__=='__main__':
     url=('https://uk.finance.yahoo.com/quote/EDF.PA/history?p=EDF.PA')
 
     Scrapper_History=Scrapper(scheme=scheme,header=header,type='table')
-    print(Scrapper_History(url=url))
+    print(Scrapper_History(url=url,header=False))
 
+    print(False)
 
     url=(('https://finance.yahoo.com/'))
     scheme={
