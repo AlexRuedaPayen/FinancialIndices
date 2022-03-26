@@ -50,25 +50,34 @@ class Scrapper:
         return(df)    
 
     def fill_boxes(self,url):
-            r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
-            web_content=BeautifulSoup(r.text,'html')
-            df=[]
-            row_=[]
-            for key1,value1 in scheme.items():
-                web_content_key1=web_content.find_all(key1, class_=value1['class_'])
-                df_list=[]
+        r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        web_content=BeautifulSoup(r.text,'html')
+        df=[]
+        for key1,value1 in scheme.items():
+            web_content_key1=web_content.find_all(key1, class_=value1['class_'])
+            df_list=[]
+            if ('row' in value1.keys()):
+                row_=dict()
                 for row in web_content_key1:
                     for key2,value2 in value1['row'].items():
                         tmpr=row.find(key2,value2['class_'])
+                        if not value2['name'] in row_.items():
+                            row_[value2['name']]=list()
                         if (tmpr==None):
-                            row_.append('')
+                            row_[value2['name']].append('')
                             continue
-                        row_.append(row.find(key2,value2['class_']).text)
+                        row_[value2['name']].append(row.find(key2,value2['class_']).text)
                     df_list.append(row_)
-                    row_=[]
-                    print("________")
-                df_tmpr=pandas.DataFrame(df_list)
-                df.append(df_tmpr)
+            else:
+                row_={value1['name'] : list()}
+                for row in web_content_key1:
+                    row_[value1['name']].append(row.text)
+                df_list.append(row_)
+            print(row_)
+            df_tmpr=pandas.DataFrame(data=row_)
+            df.append(df_tmpr)
+        return(df)   
+
 
     def __call__(self,url):
         if (self.type=='box'):
@@ -108,7 +117,7 @@ if __name__=='__main__':
     url='https://finance.yahoo.com/quote/EDF.PA/financials?p=EDF.PA'
 
     Scrapper_Financials=Scrapper(scheme=scheme,header=header,type='table')
-    print(Scrapper_Financials(url=url))"""
+    print(Scrapper_Financials(url=url))
 
     scheme={
         'tr':{
@@ -124,7 +133,7 @@ if __name__=='__main__':
     Scrapper_History=Scrapper(scheme=scheme,header=header,type='table')
     print(Scrapper_History(url=url))
 
-    """url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
+    url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
 
     scheme={
         'div':{
@@ -138,4 +147,70 @@ if __name__=='__main__':
     }
 
     Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(type='box',url=url)"""
+    print(Scrapper_Press_Releases(type='box',url=url)
+
+    url=(('https://www.bloomberg.com/europe'))
+    scheme={
+        'section':{
+            'class_':'single-story-module__eyebrow'
+        },
+        'div':{
+            'class_':'single-story-module__related-story-eyebrow'
+        },
+        'div':{
+            'class_':'story-package-module__stories',
+            'div':{
+                'class_':'div',
+                'row':{
+                    'h3':{'class':'story-package-module__story__headline'},
+                    'div':{'div':'story-package-module__story__summary'}
+                }
+            }
+        }
+    }
+    Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
+    print(Scrapper_Press_Releases(url=url))"""
+
+    url=(('https://finance.yahoo.com/'))
+    scheme={
+        'div':{
+            'class_':'Pos(a) B(0) Start(0) End(0) Bg($ntkLeadGradient) Pstart(25px) Pstart(18px)--md1100 Pt(50px) Pend(45px) Pend(25px)--md1100 Bdrsbend(2px) Bdrsbstart(2px)',
+            'row':{
+                'h2':{
+                    'class_':'Fz(22px)--md1100 Lh(25px)--md1100 Fw(b) Tsh($ntkTextShadow) Td(u):h Fz(25px) Lh(31px)',
+                     'name':'headline'
+                },
+                'p':{
+                    'class_':'Fz(12px) Fw(n) Lh(14px) LineClamp(3,42px) Pt(6px) Tov(e)',
+                    'name':'summary'
+                }
+            }
+        },
+        'h3':{
+            'class_':'Fz(14px)--md1100 Lh(16px)--md1100 Fw(700) Fz(16px) Lh(18px) LineClamp(3,54px) Va(m) Tov(e)',
+            'name':'headline'
+        },
+        'div':{
+            'class_':'Ov(h) Pend(44px) Pstart(25px)',
+            'row':{
+                'div':{
+                    'class_':'Fz(12px) Fw(b) Tt(c) D(ib) Mb(6px) C($c-fuji-blue-1-a) Mend(9px) Mt(-2px)',
+                    'name':'type'
+                },
+                'h3':{
+                    'class_':'Mb(5px)',
+                    'name':'headline'
+                },
+                'p':{
+                    'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(2,38px) LineClamp(2,34px)--sm1024 M(0)',
+                    'name':'subheadline'
+                },
+                'div':{
+                    'class_':'Lh(15px) Fw(b) LineClamp(3,45px) D(i)--sm1024 Pend(10px)--sm1024',
+                    'name':'summary'
+                }
+            }
+        }
+    }
+    Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
+    print((Scrapper_Press_Releases(url=url))[0])
