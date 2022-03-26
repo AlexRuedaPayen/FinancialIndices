@@ -10,22 +10,7 @@ class Scrapper:
 
     def __init__(self,scheme,header,type):
 
-        """assert(type(header) is dict)
-        assert(type(scheme) is dict)
-        assert(list(scheme.keys()) in set(['a','div','p']))
-        assert(type(scheme.values()) is dict or type(scheme.values) is str)
-
-        for i in scheme.values():
-            if (i is dict):
-                assert(type(i.keys()) in set(['class_,row']))
-                assert(type(i['class_']) is str)
-                assert(type(i['row']) is dict)
-                assert(i['row'].keys() in set(['h1','h2','h3','h4','h5']))
-                assert(type(i['row'].values()) is dict)
-                for j in i['row'].values():
-                    assert(j.keys() in set(['class_']))
-                    assert(type(j.values()) is str)"""
-    
+        """need to put a list of assert"""
         self.scheme=scheme
         self.header=header
         self.type=type
@@ -67,7 +52,7 @@ class Scrapper:
                 else:
                     print('Error entering header parameters')
             df.append(df_tmpr)
-        return(df)    
+        return(pandas.concat(df,axis=1))   
 
     def fill_boxes(self,url):
         r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
@@ -95,7 +80,7 @@ class Scrapper:
                 df_list.append(row_)
             df_tmpr=pandas.DataFrame(data=row_)
             df.append(df_tmpr)
-        return(df)   
+        return(pandas.concat(df,axis=1))   
 
 
     def __call__(self,url,header=False):
@@ -197,7 +182,7 @@ if __name__=='__main__':
 
     print(False)
 
-    url=(('https://finance.yahoo.com/'))
+    url=('https://finance.yahoo.com/')
     scheme={
         'div':{
             'class_':'Pos(a) B(0) Start(0) End(0) Bg($ntkLeadGradient) Pstart(25px) Pstart(18px)--md1100 Pt(50px) Pend(45px) Pend(25px)--md1100 Bdrsbend(2px) Bdrsbstart(2px)',
@@ -239,7 +224,7 @@ if __name__=='__main__':
         }
     }
     Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(url=url)[1])
+    print(Scrapper_Press_Releases(url=url))
 
 
     

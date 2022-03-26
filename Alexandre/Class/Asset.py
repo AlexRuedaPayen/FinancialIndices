@@ -23,13 +23,15 @@ class Asset:
 
         if (locally_stored):
             self.history=pandas.read_csv(filepath_or_buffer='./Data/Asset/history/'+name+'.csv')
+            self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
             self.history.index=self.history['Date']
             print(f'Data from '+ str(min(self.history['Date'].values))+' to '+str(max(self.history['Date'].values)))
 
         else:
 
             url_history=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
-            self.history=Scrapper_history_Yahoo(url=url_history)
+            self.history=Scrapper_history_Yahoo(url=url_history)[0]
+            self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
             
 
     def save(self):

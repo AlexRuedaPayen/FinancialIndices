@@ -32,4 +32,12 @@ class Stock(Asset):
         self.press_releases.to_csv('./Data/Stock/press_releases/'+name+'.csv',header=True,encoding='utf-8',index=False)
         self.financial.to_csv('./Data/Stock/financials/'+name+'.csv',header=True,encoding='utf-8',index=False)
 
-        
+if __name__=='__main__':
+
+    Rubis=Stock('RUI.PA')
+    Safran=Stock('SAF.PA')
+    EDF=Stock('EDF.PA')
+
+    Rubis.save()
+    Safran.save()
+    EDF.save()
