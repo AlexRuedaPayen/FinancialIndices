@@ -10,8 +10,8 @@ Topic_model_UI<-function(id,label="Topic_model_UI") {
     mainPanel(
              box(width=6,
                  selectInput(
-                   inputId=ns("stock_name"),
-                   label="Select a stock",
+                   inputId=ns("history_name"),
+                   label="Select a history",
                    choices=get_data,
                    selected=get_data[1]
                  )
@@ -19,7 +19,7 @@ Topic_model_UI<-function(id,label="Topic_model_UI") {
       ),
       column(width=12,
              box(width=6,
-                 highcharter(ns("stock_performance"))
+                 highcharter(ns("history_performance"))
       )
     )
   )

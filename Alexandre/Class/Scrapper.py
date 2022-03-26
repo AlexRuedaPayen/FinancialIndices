@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
+header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
+
 
 class Scrapper:
 
@@ -37,12 +39,14 @@ class Scrapper:
             web_content_key1=web_content.find_all(key1, class_=value1['class_'])
             df_list=[]
             row_=[]
+            colname=[]
+            for name in web_content_key1[0]:
+                colname.append(name)
             for row in web_content_key1[header:]:
                 for key2,value2 in value1['row'].items():
                     x_val=row.find_all(key2, class_=value2['class_'])
                     for y in x_val:
                         y_text=(''.join([z.replace(",","") for z in y.text]))
-                        row_.append(y_text)
                     df_list.append(row_)
                     row_=[]
             df_tmpr=pandas.DataFrame(df_list)
@@ -73,7 +77,6 @@ class Scrapper:
                 for row in web_content_key1:
                     row_[value1['name']].append(row.text)
                 df_list.append(row_)
-            print(row_)
             df_tmpr=pandas.DataFrame(data=row_)
             df.append(df_tmpr)
         return(df)   
@@ -85,27 +88,45 @@ class Scrapper:
         if (self.type=='table'):
             return(self.fill_table(url))
 
+
+
+scheme_financial_Yahoo={
+    'div':{
+        'class_':'D(tbr)',
+        'row':{
+            'div':{'class_':'D(tbc)'}
+        }
+    }
+}
+scheme_history_Yahoo={
+    'tr':{
+        'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
+        'row':{
+            'td':{'class_':'Py(10px)'}
+        }
+    }
+}   
+scheme_info_Yahoo={
+    'div':{
+        'class_':'Cf',
+        'row':{
+            'div':{'class_':'C(#959595) Fz(11px) D(ib) Mb(6px)'},
+            'h3':{'class_':'Mb(5px)'},
+            'p':{'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'}
+        }
+    }
+}
+
+Scrapper_financial_Yahoo=Scrapper(scheme=scheme_financial_Yahoo,header=header,type='table')
+Scrapper_history_Yahoo=Scrapper(scheme=scheme_history_Yahoo,header=header,type='table')
+Scrapper_info_Yahoo=Scrapper(scheme=scheme_info_Yahoo,header=header,type='boxes')
+
+ 
+
+
 if __name__=='__main__':
 
-    header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
-
-    """scheme={
-                'a': {
-                    'class_': 'article-item', 
-                    'row': {
-                        'h5': {'class_': 'article-date'},
-                        'h4': {'class_': 'article-title'},
-                        'p': {'class_': 'article-text'}
-                    }
-                }
-            }
-
-    url='https://site.financialmodelingprep.com/historical-data/'+'EDF.PA'
-
-    Scrapper_EDF=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_EDF(tye='table',url=url))"""
-
-    """scheme={
+    scheme={
                 'div':{
                     'class_':'D(tbr)',
                     'row':{
@@ -118,7 +139,7 @@ if __name__=='__main__':
 
     Scrapper_Financials=Scrapper(scheme=scheme,header=header,type='table')
     print(Scrapper_Financials(url=url))
-
+    
     scheme={
         'tr':{
             'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
@@ -133,43 +154,6 @@ if __name__=='__main__':
     Scrapper_History=Scrapper(scheme=scheme,header=header,type='table')
     print(Scrapper_History(url=url))
 
-    url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
-
-    scheme={
-        'div':{
-            'class_':'Cf',
-            'row':{
-                'div':{'class_':'C(#959595) Fz(11px) D(ib) Mb(6px)'},
-                'h3':{'class_':'Mb(5px)'},
-                'p':{'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'}
-            }
-        }
-    }
-
-    Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(type='box',url=url)
-
-    url=(('https://www.bloomberg.com/europe'))
-    scheme={
-        'section':{
-            'class_':'single-story-module__eyebrow'
-        },
-        'div':{
-            'class_':'single-story-module__related-story-eyebrow'
-        },
-        'div':{
-            'class_':'story-package-module__stories',
-            'div':{
-                'class_':'div',
-                'row':{
-                    'h3':{'class':'story-package-module__story__headline'},
-                    'div':{'div':'story-package-module__story__summary'}
-                }
-            }
-        }
-    }
-    Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(url=url))"""
 
     url=(('https://finance.yahoo.com/'))
     scheme={
@@ -213,4 +197,60 @@ if __name__=='__main__':
         }
     }
     Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
-    print((Scrapper_Press_Releases(url=url))[0])
+    print((Scrapper_Press_Releases(url=url)))
+
+
+    """
+    url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
+
+    scheme={
+        'div':{
+            'class_':'Cf',
+            'row':{
+                'div':{'class_':'C(#959595) Fz(11px) D(ib) Mb(6px)'},
+                'h3':{'class_':'Mb(5px)'},
+                'p':{'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'}
+            }
+        }
+    }
+
+    Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header)
+    print(Scrapper_Press_Releases(type='box',url=url)
+
+    url=(('https://www.bloomberg.com/europe'))
+    scheme={
+        'section':{
+            'class_':'single-story-module__eyebrow'
+        },
+        'div':{
+            'class_':'single-story-module__related-story-eyebrow'
+        },
+        'div':{
+            'class_':'story-package-module__stories',
+            'div':{
+                'class_':'div',
+                'row':{
+                    'h3':{'class':'story-package-module__story__headline'},
+                    'div':{'div':'story-package-module__story__summary'}
+                }
+            }
+        }
+    }
+    Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
+    print(Scrapper_Press_Releases(url=url))
+
+    scheme={
+                'a': {
+                    'class_': 'article-item', 
+                    'row': {
+                        'h5': {'class_': 'article-date'},
+                        'h4': {'class_': 'article-title'},
+                        'p': {'class_': 'article-text'}
+                    }
+                }
+            }
+
+    url='https://site.financialmodelingprep.com/historical-data/'+'EDF.PA'
+
+    Scrapper_EDF=Scrapper(scheme=scheme,header=header)
+    print(Scrapper_EDF(tye='table',url=url))"""

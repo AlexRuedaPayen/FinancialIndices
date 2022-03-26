@@ -4,14 +4,14 @@ sys.path.append(os.getcwd())
 
 def fun_A():
 
-    from Alexandre.Class.Stock import Stock
+    from Alexandre.Class.history import history
 
-    RUI_PA=Stock(name='RUI.PA')
-    VPK_AS=Stock(name='VPK.AS')
-    BP_L=Stock(name="BP.L")
-    SHELL_AS=Stock(name="SHELL.AS")
-    TTE_PA=Stock(name="TTE.PA")
-    XOM=Stock(name="XOM")
+    RUI_PA=history(name='RUI.PA')
+    VPK_AS=history(name='VPK.AS')
+    BP_L=history(name="BP.L")
+    SHELL_AS=history(name="SHELL.AS")
+    TTE_PA=history(name="TTE.PA")
+    XOM=history(name="XOM")
 
     RUI_PA.MA()
     VPK_AS.MA()
