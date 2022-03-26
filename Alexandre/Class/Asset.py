@@ -22,31 +22,19 @@ class Asset:
         self.name=name
 
         if (locally_stored):
-            self.history=pandas.read_csv(filepath_or_buffer='./Data/'+name+'.csv')
+            self.history=pandas.read_csv(filepath_or_buffer='./Data/Asset/history/'+name+'.csv')
             self.history.index=self.history['Date']
             print(f'Data from '+ str(min(self.history['Date'].values))+' to '+str(max(self.history['Date'].values)))
 
         else:
 
             url_history=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
-            url_news=('https://finance.yahoo.com/quote/'+self.name+'/news?p='+self.name)
-            url_press_releases=('https://finance.yahoo.com/quote/'+self.name+'/press-releases?p='+self.name)
-            url_financials=('https://finance.yahoo.com/quote/'+self.name+'/financials?p='+self.name)
-
-            
             self.history=Scrapper_history_Yahoo(url=url_history)
-            self.financials=Scrapper_financial_Yahoo(url=url_financials)
-            self.press_releases=Scrapper_info_Yahoo(url=url_press_releases)
-            self.news=Scrapper_info_Yahoo(url=url_news)
-    
-
+            
 
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.history.to_csv('./Data/Asset/'+name+'.history..csv',header=True,encoding='utf-8',index=False)
-        self.news.to_csv('./Data/Asset/'+name+'.news.csv',header=True,encoding='utf-8',index=False)
-        self.press_releases.to_csv('./Data/Asset/'+name+'.press_releases.csv',header=True,encoding='utf-8',index=False)
-        self.financial.to_csv('./Data/Asset/'+name+'.financial.csv',header=True,encoding='utf-8',index=False)
+        self.history.to_csv('./Data/Asset/history/'+name+'.csv',header=True,encoding='utf-8',index=False)
     
     def MA(self,day=7):
         start_date=str(datetime.datetime.strptime(min(self.history['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
@@ -86,8 +74,6 @@ class Asset:
     def plot_price(self):
 
         import matplotlib.pyplot as plt
-        import datetime
-        import re
 
         self.history['Date'] = pandas.to_datetime(self.history['Date']).dt.date
         self.history=self.history.sort_values('Date')
