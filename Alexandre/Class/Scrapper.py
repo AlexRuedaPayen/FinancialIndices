@@ -58,9 +58,7 @@ class Scrapper:
                 df_tmpr.columns=colname
             else :
                 header_=list(value1['header'].keys())
-                print(header_)
                 class__=[(h,v) for h in header_ for k,v in value1['header'][h].items() ]
-                print(class__)
                 for h,v in class__:
                     name=row.find_all(h,class_=v)
                     colname=colname+[n.text for n in name]
@@ -76,19 +74,19 @@ class Scrapper:
         web_content=BeautifulSoup(r.text,'html')
         df=[]
         for key1,value1 in scheme.items():
-            web_content_key1=web_content.find_all(key1, class_=value1['class_'])
+            web_content_key1=web_content.find_all(key1.split('_', 1)[0], class_=value1['class_'])
             df_list=[]
             if ('row' in value1.keys()):
                 row_=dict()
                 for row in web_content_key1:
                     for key2,value2 in value1['row'].items():
-                        tmpr=row.find(key2,value2['class_'])
+                        tmpr=row.find(key2.split('_', 1)[0],value2['class_'])
                         if not value2['name'] in row_.items():
                             row_[value2['name']]=list()
                         if (tmpr==None):
                             row_[value2['name']].append('')
                             continue
-                        row_[value2['name']].append(row.find(key2,value2['class_']).text)
+                        row_[value2['name']].append(row.find(key2.split('_', 1)[0],value2['class_']).text)
                     df_list.append(row_)
             else:
                 row_={value1['name'] : list()}
@@ -102,7 +100,7 @@ class Scrapper:
 
     def __call__(self,url,header=False):
         if (self.type=='box'):
-            return(self.fill_boxes(url,header))
+            return(self.fill_boxes(url))
         if (self.type=='table'):
             return(self.fill_table(url,header))
 
@@ -120,12 +118,18 @@ scheme_financial_Yahoo={
     }
 }
 scheme_history_Yahoo={
-    'tr':{
-        'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
-        'row':{
-            'td':{'class_':'Py(10px)'}
+     'tr':{
+            'header':{
+                'th':{
+                    'class1':'C($tertiaryColor) Fz(xs) Ta(end)',
+                    'class2':'Fw(400) Py(6px)'
+                }
+            },
+            'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
+            'row':{
+                'td':{'class_':'Py(10px)'}
+            }
         }
-    }
 }   
 scheme_info_Yahoo={
     'div':{
@@ -147,6 +151,10 @@ Scrapper_info_Yahoo=Scrapper(scheme=scheme_info_Yahoo,header=header,type='boxes'
 
 if __name__=='__main__':
 
+
+    print("____________________")
+    print('Test financial board')
+
     scheme={
                 'div':{
                     'header':{
@@ -164,13 +172,15 @@ if __name__=='__main__':
     Scrapper_Financials=Scrapper(scheme=scheme,header=header,type='table')
     print(Scrapper_Financials(url=url,header=True))
 
-    print("___________-")
+    print("____________________")
+    print('Test historical prices')
+    
     scheme={
         'tr':{
             'header':{
                 'th':{
-                    'class1':'C($tertiaryColor) Fz(xs) Ta(end)',
-                    'class2':'Fw(400) Py(6px)'
+                    'class_1':'C($tertiaryColor) Fz(xs) Ta(end)',
+                    'class_2':'Fw(400) Py(6px)'
                 }
             },
             'class_':'BdT Bdc($seperatorColor) Ta(end) Fz(s) Whs(nw)',
@@ -209,7 +219,7 @@ if __name__=='__main__':
         'div':{
             'class_':'Ov(h) Pend(44px) Pstart(25px)',
             'row':{
-                'div':{
+                'div_1':{
                     'class_':'Fz(12px) Fw(b) Tt(c) D(ib) Mb(6px) C($c-fuji-blue-1-a) Mend(9px) Mt(-2px)',
                     'name':'type'
                 },
@@ -221,7 +231,7 @@ if __name__=='__main__':
                     'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(2,38px) LineClamp(2,34px)--sm1024 M(0)',
                     'name':'subheadline'
                 },
-                'div':{
+                'div_2':{
                     'class_':'Lh(15px) Fw(b) LineClamp(3,45px) D(i)--sm1024 Pend(10px)--sm1024',
                     'name':'summary'
                 }
@@ -229,26 +239,36 @@ if __name__=='__main__':
         }
     }
     Scrapper_Press_Releases=Scrapper(type='box',scheme=scheme,header=header)
-    print((Scrapper_Press_Releases(url=url)))
+    print(Scrapper_Press_Releases(url=url)[1])
 
 
-    """
+    
     url=(('https://finance.yahoo.com/quote/EDF.PA/press-releases?p=EDF.PA'))
 
     scheme={
         'div':{
             'class_':'Cf',
             'row':{
-                'div':{'class_':'C(#959595) Fz(11px) D(ib) Mb(6px)'},
-                'h3':{'class_':'Mb(5px)'},
-                'p':{'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)'}
+                'div':{
+                    'class_':'C(#959595) Fz(11px) D(ib) Mb(6px)',
+                    'name':'source'
+                },
+                'h3':{
+                    'class_':'Mb(5px)',
+                    'name':'headline'
+                },
+                'p':{
+                    'class_':'Fz(14px) Lh(19px) Fz(13px)--sm1024 Lh(17px)--sm1024 LineClamp(3,57px) LineClamp(3,51px)--sm1024 M(0)',
+                    'name':'summary'
+                }
             }
         }
     }
 
-    Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header)
-    print(Scrapper_Press_Releases(type='box',url=url)
+    Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='box')
+    print(Scrapper_Press_Releases(url=url))
 
+    """
     url=(('https://www.bloomberg.com/europe'))
     scheme={
         'section':{
