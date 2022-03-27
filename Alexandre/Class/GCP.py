@@ -43,9 +43,15 @@ class GCP:
         self.ssh.exec_command('conda activate')
         print("Running function "+file_path_script_destination)
         stdin,stdout,stderr=self.ssh.exec_command('python3.7 '+file_path_script_destination)
+        stdin.close()
+        stdout.close()
+        stderr.close()
         print("Function "+file_path_script_destination+" done")
         self.ssh.exec_command('conda deactivate')
-        """self.scp.get(file_path_script_origin,file_path_script_destination)"""
+        self.ssh.exec_command('rm file_path_script_destination')
+        file_path_result_origin="~/Projects/Financial_Indices/Data/Script/fun_A.json"
+        file_path_result_destination="./Alexandre/Script/fun_A.json"
+        self.scp.get(file_path_result_origin,file_path_result_destination)
 
 
     def __exit__(self,type, value, traceback):

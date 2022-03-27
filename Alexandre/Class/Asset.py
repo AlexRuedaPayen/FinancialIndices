@@ -22,7 +22,7 @@ class Asset:
         self.name=name
 
         if (locally_stored):
-            self.history=pandas.read_csv(filepath_or_buffer='./Data/Asset/history/'+name+'.csv')
+            self.history=pandas.read_csv(filepath_or_buffer='./Data/Class/Asset/history/'+name+'.csv')
             self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
             self.history.index=self.history['Date']
             print(f'Data from '+ str(min(self.history['Date'].values))+' to '+str(max(self.history['Date'].values)))
@@ -36,7 +36,7 @@ class Asset:
 
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.history.to_csv('./Data/Asset/history/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.history.to_csv('./Data/Class/Asset/history/'+name+'.csv',header=True,encoding='utf-8',index=False)
     
     def MA(self,day=7):
         start_date=str(datetime.datetime.strptime(min(self.history['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
@@ -137,3 +137,6 @@ if __name__=='__main__':
     EDF=Asset('EDF.PA')
     Wheat=Asset('ZW%3DF')
     Brent=Asset('BZ%3DF')
+
+    Rubis.normalize_date({'Safran':Safran,'EDF':EDF,'Wheat':Wheat,'Brent':Brent})
+    Rubis.plot_price()

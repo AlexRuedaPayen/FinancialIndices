@@ -57,11 +57,11 @@ class Reddit:
         
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.redit_data.to_csv('./Data/Reddit/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.redit_data.to_csv('./Data/Class/Reddit/'+name+'.csv',header=True,encoding='utf-8',index=False)
 
     def load(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.redit_data=pandas.read_csv(filepath_or_buffer='./Data/Reddit/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.redit_data=pandas.read_csv(filepath_or_buffer='./Data/Class/Reddit/'+name+'.csv',header=True,encoding='utf-8',index=False)
 
     def topic_model_LDA(self,num_topics = 10):
         """
@@ -123,7 +123,9 @@ class Reddit:
 
 
 if __name__=='__main__':
-    Ukraine=Reddit()
+    Ukraine=Reddit(topic="Ukraine",
+                   top=100,
+                   attributes=['headlines','id','author','created_utc','score','upvote_ratio','url'])
     Ukraine.topic_model_LDA()
     Ukraine.sentiment_analysis()
     Ukraine.save()

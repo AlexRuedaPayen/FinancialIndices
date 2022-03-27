@@ -11,9 +11,9 @@ class Stock(Asset):
 
         if locally_stored:
 
-            self.news=pandas.read_csv(filepath_or_buffer='./Data/Stock/news/'+name+'.csv')
-            self.press_releases=pandas.read_csv(filepath_or_buffer='./Data/Stock/press-releases/'+name+'.csv')
-            self.financials=pandas.read_csv(filepath_or_buffer='./Data/Stock/financials/'+name+'.csv')
+            self.news=pandas.read_csv(filepath_or_buffer='./Data/Class/Stock/news/'+name+'.csv')
+            self.press_releases=pandas.read_csv(filepath_or_buffer='./Data/Class/Stock/press-releases/'+name+'.csv')
+            self.financials=pandas.read_csv(filepath_or_buffer='./Data/Class/Stock/financials/'+name+'.csv')
 
         else:
 
@@ -28,9 +28,9 @@ class Stock(Asset):
 
     def save(self):
         name=[n for n,v in globals().items() if v == self][0]
-        self.news.to_csv('./Data/Stock/news/'+name+'.csv',header=True,encoding='utf-8',index=False)
-        self.press_releases.to_csv('./Data/Stock/press_releases/'+name+'.csv',header=True,encoding='utf-8',index=False)
-        self.financial.to_csv('./Data/Stock/financials/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.news.to_csv('./Data/Class/Stock/news/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.press_releases.to_csv('./Data/Class/Stock/press_releases/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.financial.to_csv('./Data/Class/Stock/financials/'+name+'.csv',header=True,encoding='utf-8',index=False)
 
 if __name__=='__main__':
 

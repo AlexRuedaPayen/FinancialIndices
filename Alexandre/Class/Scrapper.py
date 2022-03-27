@@ -55,7 +55,7 @@ class Scrapper:
         return(pandas.concat(df,axis=1))   
 
     def fill_boxes(self,url):
-        r=requests.get(url,headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        r=requests.get(url,headers=self.header)
         web_content=BeautifulSoup(r.text,'html')
         df=[]
         for key1,value1 in scheme.items():
