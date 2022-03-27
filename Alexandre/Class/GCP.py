@@ -35,7 +35,7 @@ class GCP:
             print("File "+file_path_class_destination+i+".py"+" created")
         return(self)
 
-    def run(self,script):
+    def run(self,script,remove_on_device=False):
         file_path_script_origin="./Alexandre/Script/"+script+".py"
         file_path_script_destination="~/Projects/Financial_Indices/Alexandre/Script/"+script+".py"
         self.scp.put(file_path_script_origin,file_path_script_destination)
@@ -63,6 +63,9 @@ class GCP:
         file_path_result_origin="~/Projects/Financial_Indices/Data/Script/"+script+".json"
         file_path_result_destination="./Alexandre/Script/"+script+".json"
         self.scp.get(file_path_result_origin,file_path_result_destination)
+        if remove_on_device:
+            stdin,stdout,stderr=self.ssh.exec_command('rm '+file_path_result_origin)
+            stdout.channel.recv_exit_status()
 
 
     def __exit__(self,type, value, traceback):
