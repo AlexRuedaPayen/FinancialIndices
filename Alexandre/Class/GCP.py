@@ -40,22 +40,34 @@ class GCP:
         file_path_script_destination="~/Projects/Financial_Indices/Alexandre/Script/"+script+".py"
         self.scp.put(file_path_script_origin,file_path_script_destination)
         print("File "+file_path_script_destination+" created")
-        self.ssh.exec_command('conda activate')
+        stdin,stdout,stderr=self.ssh.exec_command('conda activate')
+        stdout.channel.recv_exit_status()
+        stdout.readlines()
+        stdin.close()
+        stdout.close()
+        stderr.close()
         print("Running function "+file_path_script_destination)
         stdin,stdout,stderr=self.ssh.exec_command('python3.7 '+file_path_script_destination)
+        stdout.channel.recv_exit_status()
+        print(stdout.readlines())
         stdin.close()
         stdout.close()
         stderr.close()
         print("Function "+file_path_script_destination+" done")
-        self.ssh.exec_command('conda deactivate')
-        self.ssh.exec_command('rm file_path_script_destination')
-        file_path_result_origin="~/Projects/Financial_Indices/Data/Script/fun_A.json"
-        file_path_result_destination="./Alexandre/Script/fun_A.json"
+        stdin,stdout,stderr=self.ssh.exec_command('conda deactivate')
+        stdout.channel.recv_exit_status()
+        stdout.readlines()
+        stdin.close()
+        stdout.close()
+        stderr.close()
+        file_path_result_origin="~/Projects/Financial_Indices/Data/Script/"+script+".json"
+        file_path_result_destination="./Alexandre/Script/"+script+".json"
         self.scp.get(file_path_result_origin,file_path_result_destination)
 
 
     def __exit__(self,type, value, traceback):
+        print("Closing SSH connection")
         self.ssh.close()
 
-with GCP() as f:
+with GCP(class_=["Asset","Reddit"]) as f:
     f.run("fun_A")

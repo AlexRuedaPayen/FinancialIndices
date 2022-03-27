@@ -93,6 +93,8 @@ class Reddit:
         pprint(lda_model.print_topics())
         doc_lda = lda_model[corpus]
 
+        self.topic_list=lda_model.print_topics()
+
         aad=list()
         for topic in doc_lda:
             aad.append(topic)
