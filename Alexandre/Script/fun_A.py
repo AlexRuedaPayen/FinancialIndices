@@ -2,6 +2,9 @@ import os,sys,json
 from ssl import AlertDescription
 #print(os.getcwd())
 #sys.path.append(os.getcwd())
+
+
+
 device_path="/home/MacAlexandre_GCP_VM1/Projects/"
 sys.path.append(device_path+"Financial_Indices/")
 

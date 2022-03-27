@@ -1,6 +1,6 @@
 import paramiko,scp,json
 
-class GCP:
+class onDevice:
 
     def __init__(self,
                 keyfile="/Users/alexandreprofessional2/Desktop/key/key_GCP_VM1",
@@ -61,7 +61,7 @@ class GCP:
         stdout.close()
         stderr.close()
         file_path_result_origin="~/Projects/Financial_Indices/Data/Script/"+script+".json"
-        file_path_result_destination="./Alexandre/Script/"+script+".json"
+        file_path_result_destination="./Data/Script/"+script+".json"
         self.scp.get(file_path_result_origin,file_path_result_destination)
         if remove_on_device:
             stdin,stdout,stderr=self.ssh.exec_command('rm '+file_path_result_origin)
@@ -72,5 +72,5 @@ class GCP:
         print("Closing SSH connection")
         self.ssh.close()
 
-with GCP(class_=["Asset","Reddit"]) as f:
+with onDevice(class_=["Asset","Reddit"]) as f:
     f.run("fun_A")
