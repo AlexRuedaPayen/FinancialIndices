@@ -38,6 +38,10 @@ if __name__=='__main__':
     Safran=Stock('SAF.PA')
     EDF=Stock('EDF.PA')
 
+    print(Rubis)
+    print(Safran)
+    print(EDF)
+
     Rubis.save()
     Safran.save()
     EDF.save()

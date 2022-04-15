@@ -1,5 +1,6 @@
 import os,sys,json
 from ssl import AlertDescription
+from trace import CoverageResults
 #print(os.getcwd())
 #sys.path.append(os.getcwd())
 

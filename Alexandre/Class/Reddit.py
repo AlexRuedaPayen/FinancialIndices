@@ -4,6 +4,7 @@ from gensim.utils import simple_preprocess
 import gensim.corpora as corpora
 import nltk
 import ssl
+from simpletransformers.language_representation import RepresentationModel
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -123,6 +124,20 @@ class Reddit:
             self.redit_data.iloc[i,ind_neu]=pol_score['neu']
             self.redit_data.iloc[i,ind_neg]=pol_score['neg']      
 
+    def get_neutral(self):
+        self.neutral_indices=self.redit_data[self.redit_data['neutral']>0.8]
+
+    def language_model(self):
+        model=RepresentationModel(
+            model_type='bert',
+            model_name='bert-base-uncased',
+            use_cuda=False
+        )
+        self.embedding=model.encode_sentences(self.redit_data['headlines'],combine_strategy=False)
+
+    def predict(self,asset):
+        sigma,r=asset.prediction_RNN_black_box(self.embedding)
+        P=asset.solve_Black_Scholes(sigma,r)
 
 if __name__=='__main__':
     Ukraine=Reddit(topic="Ukraine",
@@ -130,6 +145,8 @@ if __name__=='__main__':
                    attributes=['headlines','id','author','created_utc','score','upvote_ratio','url'])
     Ukraine.topic_model_LDA()
     Ukraine.sentiment_analysis()
+    Ukraine.get_neutral()
     Ukraine.save()
 
     print(Ukraine.redit_data)
+    print(Ukraine.neutral_indices)

@@ -1,6 +1,6 @@
-import paramiko,scp,json
-
 class onDevice:
+    
+    import paramiko,scp,json
 
     def __init__(self,
                 keyfile="/Users/alexandreprofessional2/Desktop/key/key_GCP_VM1",
