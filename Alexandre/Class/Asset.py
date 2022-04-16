@@ -90,11 +90,6 @@ class Asset:
         self.history.to_csv('./Data/Class/Asset/history/'+name+'.csv',header=True,encoding='utf-8',index=False)
     
     def MA(self,day=7):
-        #start_date=str(datetime.datetime.strptime(min(self.history['Date'].values), "%Y-%m-%d")+ datetime.timedelta(days=day))
-        """start_date=min(self.history['Date'].values)
-        end_date=max(self.history['Date'].values)
-        print(start_date,end_date)
-        exit()"""
         self.history['Open_MA']=(self.history['Open']).rolling(window=day).mean()
 
     def derivative_rate_(self,order=2):
@@ -194,6 +189,67 @@ class Asset:
         return(Corr_dict)
 
 
+    def prediction_price(self,method='PROPHET'):
+
+        assert(method in set(['PROPHET','ARIMA','LTSM']))
+
+        if method=='PROPHET':
+
+            from fbprophet import Prophet
+
+            fbp = Prophet(daily_seasonality = True)
+            df=self.derivative_rate[1].loc[:,['Date','Open']]
+            fbp.fit(df)
+            fut = fbp.make_future_dataframe(periods=15) 
+            forecast = fbp.predict(fut)
+
+        if method=='ARIMA':
+
+            from statsmodels.tsa.arima_model import ARIMA
+            from sklearn.metrics import mean_squared_error
+
+            df=self.derivative_rate[1].loc[:,['Date','Open']]
+            train_data, test_data = df[0:int(len(df)*0.7)], df[int(len(df)*0.7):]
+            training_data = train_data['Open'].values
+            test_data = test_data['Open'].values   
+            history = [x for x in training_data]
+            model_predictions = []
+            N_test_observations = len(test_data)
+            for time_point in range(N_test_observations):
+                model = ARIMA(history, order=(6,1,0))
+                model_fit = model.fit(disp=0)
+                output = model_fit.forecast()
+                yhat = output[0]
+                model_predictions.append(yhat)
+                true_test_value = test_data[time_point]
+                history.append(true_test_value)
+            MSE_error = mean_squared_error(test_data, model_predictions)
+
+        if method=='LTSM':
+            from sklearn.preprocessing import MinMaxScaler
+            from tensorflow.python.keras.models import Sequential,load_model
+            from tensorflow.python.keras.models import LSTM,Dense,Dropout
+            X_train_list=[]
+            X_train=[]
+            i=0
+            for key,values in self.assets_normize.items():
+                values.index=values["Date"].tolist()
+                values=values.drop("Date",axis=1)
+                #values=values.add_suffix('_'+key)
+                X_train_list.append(values)
+            print(X_train_list)   
+            X_train=pandas.concat(X_train_list,axis=1)
+            scaler=MinMaxScaler(feature_range=(0,1))
+            scaled_data=scaler.fit_transform(X_train)
+            model=Sequential()
+            model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_data.shape[1],1)))
+            model.add(Dropout(0.2))
+            model.add(LSTM(units=50,return_sequences=True))
+            model.add(Dropout(0.2) )
+            model.add(LSTM(units=50,return_sequences=True))
+            model.add(Dense(units=1))
+            model.compile(optimizer='adam',loss='mean_squared_error')
+            model.fit(X_train,self.history,epochs=25,batch_size=32)
 
 
     def plot_price(self):
@@ -203,43 +259,19 @@ class Asset:
         plt=self.plotter(self.history)
         plt.savefig('./Data/Asset/fig/plot_'+name+'.png')
 
-
-    def prediction_RNN_black_box(self,days_ahead=4):
-        X_train_list=[]
-        X_train=[]
-        i=0
-        for key,values in self.assets_normize.items():
-            values.index=values["Date"].tolist()
-            values=values.drop("Date",axis=1)
-            values=values.add_suffix('_'+key)
-            X_train_list.append(values)   
-        X_train=pandas.concat(X_train_list,axis=1)
-        print(X_train)
-        scaler=MinMaxScaler(feature_range=(0,1))
-        scaled_data=scaler.fit_transform(X_train)
-        print(scaled_data)
-        model=Sequential()
-        model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_data.shape[1],1)))
-        model.add(Dropout(0.2))
-        model.add(LSTM(units=50,return_sequences=True))
-        model.add(Dropout(0.2) )
-        model.add(LSTM(units=50,return_sequences=True))
-        model.add(Dense(units=1))
-        model.compile(optimizer='adam',loss='mean_squared_error')
-        model.fit(X_train,self.history,epochs=25,batch_size=32)
-
 if __name__=='__main__':
 
     Rubis=Asset('RUI.PA')
     Safran=Asset('SAF.PA')
     EDF=Asset('EDF.PA')
-    #Wheat=Asset('ZW%3DF')
-    #Brent=Asset('BZ%3DF')
+    """Wheat=Asset('ZW%3DF')
+    Brent=Asset('BZ%3DF')"""
 
     Rubis.MA()
     Rubis.derivative_rate_()
-    print(Rubis.correlation_coefficient({'Safran':Safran},{i:1/7 for i in range(1,8)}))
-    print(Rubis)
+    Rubis.normalize_date(Assets={'Safran':Safran,'EDF':EDF})
+    Rubis.prediction_price(method='LTSM')
+    #corr_Rubis=Rubis.correlation_coefficient({'Wheat':Wheat,'Brent':Brent},{i:1/7 for i in range(1,8)})
 
     #Rubis.normalize_date({'Safran':Safran,'EDF':EDF,'Wheat':Wheat,'Brent':Brent})
     #Rubis.plot_price()
