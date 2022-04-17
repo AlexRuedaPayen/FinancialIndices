@@ -21,14 +21,16 @@ class Asset:
 
         self.name=name
 
-        if (os.path.isfile('/Data/Class/Asset/history/'+name+'.csv')):
+        if os.path.isfile('./Data/Class/Asset/history/'+name+'.csv'):
             self.history=pandas.read_csv(filepath_or_buffer='./Data/Class/Asset/history/'+name+'.csv')
             self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
             self.history.index=self.history['Date']
+            print(f'Data already locally stored')
             print(f'Data from '+ str(min(self.history['Date'].values))+' to '+str(max(self.history['Date'].values)))
 
         else:
-
+            print(f'Data not yet locally stored')
+            print(f'Scrapping on Finance.Yahoo.com')
             url_history=('https://uk.finance.yahoo.com/quote/'+self.name+'/history?p='+self.name)
             self.history=Scrapper_history_Yahoo(url=url_history)
             self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
@@ -85,10 +87,8 @@ class Asset:
 
     def save(self):
         self.history.to_csv('./Data/Class/Asset/history/'+self.name+'.csv',header=True,encoding='utf-8',index=False)
-    
-    def MA(self,day=7):
-        self.history['Open_MA']=(self.history['Open']).rolling(window=day).mean()
-
+        print(f'File saved at '+'./Data/Class/Asset/history/'+self.name+'.csv')
+ 
     def derivative_rate_(self,order=2):
         self.derivative_rate=[]
         df=self.history.loc[:, self.history.columns != 'Date']
@@ -98,14 +98,12 @@ class Asset:
             f_a=df.iloc[0:(n-2),].values
             tmpr=f_x
             tmpr=tmpr-f_a
-            tmpr=tmpr/f_a
+            #tmpr=tmpr/f_a
             tmpr=pandas.DataFrame(tmpr)
             tmpr.columns=df.columns
             df=tmpr
             tmpr=tmpr.assign(Date=(self.history.loc)[1:(n-2),'Date'].values)
             self.derivative_rate.append(tmpr)
-        for ind,value in enumerate(self.derivative_rate):
-            value.loc[:,value.columns != 'Date']*=100
 
     def normalize_date(self,Assets):
         init_val_asset_denominator=self.history.iloc[self.history.shape[0]-1,1]
@@ -113,12 +111,12 @@ class Asset:
         for key,asset in Assets.items():
             init_val_numerator=asset.history.iloc[asset.history.shape[0]-1,1]
             quot=init_val_asset_denominator/init_val_numerator
-            tmpr=asset.history
-            tmpr['Open']=[math.log(x*(quot)) for x in asset.history['Open']]
-            tmpr['Close']=[math.log(x*(quot)) for x in asset.history['Close']]
-            tmpr['High']=[math.log(x*(quot)) for x in asset.history['High']]
-            tmpr['Low']=[math.log(x*(quot)) for x in asset.history['Low']]
-            self.assets_normize[key]=tmpr
+            #tmpr=asset.history
+            asset.history['Open']=[math.log(x*(quot)) for x in asset.history['Open']]
+            asset.history['Close']=[math.log(x*(quot)) for x in asset.history['Close']]
+            asset.history['High']=[math.log(x*(quot)) for x in asset.history['High']]
+            asset.history['Low']=[math.log(x*(quot)) for x in asset.history['Low']]
+            self.assets_normize[key]=asset
         self.history['Open']=[math.log(x) for x in self.history['Open'].values]
         self.history['Close']=[math.log(x) for x in self.history['Close'].values]
         self.history['High']=[math.log(x) for x in self.history['High'].values]
@@ -157,37 +155,49 @@ class Asset:
         return(plt)
 
 
-    def correlation_coefficient(self,Asset,distribution):
+    def correlation_coefficient(self,distribution):
         import scipy.stats
         Corr_dict=dict()
-        for key,value in Asset.items():
+        asset=self.assets_normize
+
+   
+        def MA(df,name='Open',day=7):
+            df[name+'_MA']=(df[name]).rolling(window=day).mean()
+            return(df)
+
+
+        for key,value in asset.items():
             corr=0
             for ma,prob in distribution.items():
-                self.MA(day=ma)
-                value.MA(day=ma)
                 self.derivative_rate_()
                 value.derivative_rate_()
 
-                a=self.derivative_rate[1].loc[:,['Date','Open_MA']]
-                b=value.derivative_rate[1].loc[:,['Date','Open_MA']]
+                a=self.derivative_rate[1].loc[:,['Date','Open']]
+                b=value.derivative_rate[1].loc[:,['Date','Open']]
+
+                print(a)
+
+                a=MA(df=a,name='Open',day=ma)
+                b=MA(df=b,name='Open',day=ma)
 
                 a=a[~a.isin([numpy.nan, numpy.inf, -numpy.inf]).any(1)]
                 b=b[~b.isin([numpy.nan, numpy.inf, -numpy.inf]).any(1)]
-                print(a,b)
 
                 n=pandas.concat(
                     objs=[a,b],
                     axis=1
                 )
 
-                print(n['Open_MA'])
-                print(n['Open_MA'].iloc[:,0].values)
-                print(n['Open_MA'].iloc[:,1].values)
+                print(n)
                 local=scipy.stats.pearsonr(n['Open_MA'].iloc[:,0].values,n['Open_MA'].iloc[:,1].values)
                 print(local)
-                corr+=prob*local
+                corr+=prob*local[1]
             Corr_dict[key]=corr
-        return(Corr_dict)
+
+        name=[n for n,v in globals().items() if v == self][0]
+
+        for key,value in Corr_dict.items():
+            print("Correlation "+name+"/"+key+" : {:.1f}%".format(value*100))
 
 
     def prediction_price(self,method='ARIMA'):
@@ -195,7 +205,6 @@ class Asset:
         assert(method.issubset(set(['ARIMA','LTSM'])))
 
         list_df=dict()
-
         self.history.sort_values(by='Date', axis=0, ascending=True, inplace=True)
 
         if 'ARIMA' in method:
@@ -239,7 +248,9 @@ class Asset:
             values.index=self.history["Date"].tolist()
             X_train_list=[values]
             i=0
-            for key,values in self.assets_normize.items():
+            for key,val in self.assets_normize.items():
+                values=val.history
+                values.sort_values(by='Date', axis=0, ascending=True, inplace=True)
                 values.index=values["Date"].tolist()
                 values=values[['Open']]
                 values=values.add_suffix("_"+key)
@@ -247,8 +258,14 @@ class Asset:
             Y_train=X_train_list[0]
             X_train=pandas.concat(X_train_list[1:],axis=1)
 
+            X_train,X_test=X_train[0:int((X_train.shape[0])*0.7)], X_train[int((X_train.shape[0])*0.7):]
+            Y_train,Y_test=Y_train[0:int((Y_train.shape[0])*0.7)], Y_train[int((Y_train.shape[0])*0.7):]
+
             scaled_x_train = X_train.values.tolist()
             scaled_x_train = numpy.asarray(scaled_x_train).astype('float32')
+
+            scaled_x_test = X_test.values.tolist()
+            scaled_x_test = numpy.asarray(scaled_x_test).astype('float32')
            
             model=Sequential()
             model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_x_train.shape[1],1)))
@@ -262,12 +279,21 @@ class Asset:
 
             scaled_x_train=numpy.reshape(scaled_x_train,(scaled_x_train.shape[0],scaled_x_train.shape[1],1))
             scaled_y_train=numpy.reshape(scaled_y_train,(scaled_y_train.shape[0],scaled_y_train.shape[1],1))
+
+            scaled_x_test=numpy.reshape(scaled_x_test,(scaled_x_test.shape[0],scaled_x_test.shape[1],1))
             model.fit(scaled_x_train,scaled_y_train,epochs=25,batch_size=32)
 
 
-            scaled_prediction=model.predict(scaled_x_train)
-            prediction=[math.exp(x) for x in scaled_prediction]
-            Y=[math.exp(x) for x in Y_train['Open'].values]
+            scaled_train_prediction=model.predict(scaled_x_train)
+            scaled_test_prediction=model.predict(scaled_x_test)
+            train_prediction=[math.exp(x) for x in scaled_train_prediction]
+            test_prediction=[math.exp(x) for x in scaled_test_prediction]
+
+            prediction=train_prediction+test_prediction
+
+            print(len(prediction))
+       
+            Y=[math.exp(x) for x in self.history['Open'].values]
 
             df=pandas.DataFrame({'Date':self.history["Date"].tolist(),'Open':Y,'Open_prediction':prediction})
             list_df['LTSM']=df
@@ -303,19 +329,18 @@ if __name__=='__main__':
     Rubis=Asset('RUI.PA')
     Safran=Asset('SAF.PA')
     EDF=Asset('EDF.PA')
+
+    Rubis.save()
+    Safran.save()
+    EDF.save()
     """Wheat=Asset('ZW%3DF')
     Brent=Asset('BZ%3DF')"""
 
-    Rubis.MA()
-    Rubis.derivative_rate_()
+    """Rubis.derivative_rate_()
     Rubis.normalize_date(Assets={'Safran':Safran,'EDF':EDF})
-
-    print(Asset)
-
-    Rubis.prediction_price(method=set(['ARIMA','LTSM']))
-
-    #Rubis.prediction_price(method='LTSM')
-    #corr_Rubis=Rubis.correlation_coefficient({'Wheat':Wheat,'Brent':Brent},{i:1/7 for i in range(1,8)})
+    #Rubis.prediction_price(method=set(['LTSM']))
+    corr_Rubis=Rubis.correlation_coefficient({i:1/7 for i in range(1,8)})
+    Rubis.prediction_price(method=set(['LTSM']))"""
 
     #Rubis.normalize_date({'Safran':Safran,'EDF':EDF,'Wheat':Wheat,'Brent':Brent})
     #Rubis.plot_price()
