@@ -1,0 +1,34 @@
+---
+title: "Time series"
+output: pdf_document
+---
+
+
+## ABSTRACT
+
+The idea of this project is to build a reliable and robust model to predict stocks.
+
+To do this we will : 
+1. Build a scrapper which collectstext data and quantitative data from the web.
+2. Build a language model which transform text data to embeddings
+3. Apply an Online SVM model to understand whether an info is Financialy positive or negative for a stock.
+4. Build a pipeline with a neural network able to predict the stock according to underlying assets and text data.
+
+
+### 1. Time Serie Model
+
+Let :
+*   $t \in \mathbb{R}_+ $ be the time parameter
+*   $S : \mathcal{R}_+ \rightarrow \mathcal{R}^*_+$ be the price of a stock
+*   $(UA)_{i \in \mathcal{I}} : \mathcal{I} \rightarrow (\mathcal{R}_+ \rightarrow \mathcal{R}^+)$ be the price of a family of underlying assets/
+
+$$S(t,(UA)_{i \in \mathcal{I}})= \left(\sum_{i \in \mathcal{I}} \sigma_i . UA(i,t) \right) + SE(t) + T(t) + \mathcal{E}(t)$$
+
+$$ UA(i,t) =  \mathcal{M}(I(t),t).T(t) + SE(t) + \mathcal{E}(t)$$
+
+
+```{echo=FALSE}
+summary(cars)
+```
+
+

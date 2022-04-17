@@ -21,7 +21,7 @@ class Asset:
 
         self.name=name
 
-        if (locally_stored):
+        if (os.path.isfile('/Data/Class/Asset/history/'+name+'.csv')):
             self.history=pandas.read_csv(filepath_or_buffer='./Data/Class/Asset/history/'+name+'.csv')
             self.history.columns=['Date','Open','High','Low','Close','Close_Adj','Num_Transactions']
             self.history.index=self.history['Date']
@@ -77,8 +77,6 @@ class Asset:
 
         return("\n")
 
-
-    
     def __repr__(self):
         return(self.disp())
 
@@ -86,8 +84,7 @@ class Asset:
         return(self.disp())
 
     def save(self):
-        name=[n for n,v in globals().items() if v == self][0]
-        self.history.to_csv('./Data/Class/Asset/history/'+name+'.csv',header=True,encoding='utf-8',index=False)
+        self.history.to_csv('./Data/Class/Asset/history/'+self.name+'.csv',header=True,encoding='utf-8',index=False)
     
     def MA(self,day=7):
         self.history['Open_MA']=(self.history['Open']).rolling(window=day).mean()
@@ -117,11 +114,15 @@ class Asset:
             init_val_numerator=asset.history.iloc[asset.history.shape[0]-1,1]
             quot=init_val_asset_denominator/init_val_numerator
             tmpr=asset.history
-            tmpr['Open']=[x*(quot) for x in asset.history['Open']]
-            tmpr['Close']=[x*(quot) for x in asset.history['Close']]
-            tmpr['High']=[x*(quot) for x in asset.history['High']]
-            tmpr['Low']=[x*(quot) for x in asset.history['Low']]
+            tmpr['Open']=[math.log(x*(quot)) for x in asset.history['Open']]
+            tmpr['Close']=[math.log(x*(quot)) for x in asset.history['Close']]
+            tmpr['High']=[math.log(x*(quot)) for x in asset.history['High']]
+            tmpr['Low']=[math.log(x*(quot)) for x in asset.history['Low']]
             self.assets_normize[key]=tmpr
+        self.history['Open']=[math.log(x) for x in self.history['Open'].values]
+        self.history['Close']=[math.log(x) for x in self.history['Close'].values]
+        self.history['High']=[math.log(x) for x in self.history['High'].values]
+        self.history['Low']=[math.log(x) for x in self.history['Low'].values]
         
     def plotter(self,df):
         import matplotlib.pyplot as plt
@@ -189,27 +190,21 @@ class Asset:
         return(Corr_dict)
 
 
-    def prediction_price(self,method='PROPHET'):
+    def prediction_price(self,method='ARIMA'):
 
-        assert(method in set(['PROPHET','ARIMA','LTSM']))
+        assert(method.issubset(set(['ARIMA','LTSM'])))
 
-        if method=='PROPHET':
+        list_df=dict()
 
-            from fbprophet import Prophet
+        self.history.sort_values(by='Date', axis=0, ascending=True, inplace=True)
 
-            fbp = Prophet(daily_seasonality = True)
-            df=self.derivative_rate[1].loc[:,['Date','Open']]
-            fbp.fit(df)
-            fut = fbp.make_future_dataframe(periods=15) 
-            forecast = fbp.predict(fut)
+        if 'ARIMA' in method:
 
-        if method=='ARIMA':
-
-            from statsmodels.tsa.arima_model import ARIMA
+            from statsmodels.tsa.arima.model import ARIMA
             from sklearn.metrics import mean_squared_error
 
-            df=self.derivative_rate[1].loc[:,['Date','Open']]
-            train_data, test_data = df[0:int(len(df)*0.7)], df[int(len(df)*0.7):]
+            df=self.history.loc[:,['Date','Open']]
+            train_data, test_data = df[0:int((df.shape[0])*0.7)], df[int((df.shape[0])*0.7):]
             training_data = train_data['Open'].values
             test_data = test_data['Open'].values   
             history = [x for x in training_data]
@@ -217,47 +212,91 @@ class Asset:
             N_test_observations = len(test_data)
             for time_point in range(N_test_observations):
                 model = ARIMA(history, order=(6,1,0))
-                model_fit = model.fit(disp=0)
+                model_fit = model.fit()
                 output = model_fit.forecast()
                 yhat = output[0]
                 model_predictions.append(yhat)
                 true_test_value = test_data[time_point]
                 history.append(true_test_value)
             MSE_error = mean_squared_error(test_data, model_predictions)
+            print("MSE error : {:f}".format(MSE_error))
 
-        if method=='LTSM':
+            print(100-(df.shape[0])*0.7)
+            print(len(model_predictions))
+            df['Open_prediction'] = [math.exp(x) for x in df['Open'].values]
+            df.loc[int((df.shape[0])*0.7):,'Open_prediction'] = [math.exp(x) for x in model_predictions]
+
+            list_df['ARIMA']=df
+            
+
+        if 'LTSM' in method:
+
             from sklearn.preprocessing import MinMaxScaler
-            from tensorflow.python.keras.models import Sequential,load_model
-            from tensorflow.python.keras.models import LSTM,Dense,Dropout
-            X_train_list=[]
-            X_train=[]
+            from tensorflow.python.keras.engine.sequential import Sequential
+            from tensorflow.python.keras.layers import LSTM,Dense,Dropout,Input
+            
+            values=self.history[['Open']]
+            values.index=self.history["Date"].tolist()
+            X_train_list=[values]
             i=0
             for key,values in self.assets_normize.items():
                 values.index=values["Date"].tolist()
-                values=values.drop("Date",axis=1)
-                #values=values.add_suffix('_'+key)
-                X_train_list.append(values)
-            print(X_train_list)   
-            X_train=pandas.concat(X_train_list,axis=1)
-            scaler=MinMaxScaler(feature_range=(0,1))
-            scaled_data=scaler.fit_transform(X_train)
+                values=values[['Open']]
+                values=values.add_suffix("_"+key)
+                X_train_list.append(values) 
+            Y_train=X_train_list[0]
+            X_train=pandas.concat(X_train_list[1:],axis=1)
+
+            scaled_x_train = X_train.values.tolist()
+            scaled_x_train = numpy.asarray(scaled_x_train).astype('float32')
+           
             model=Sequential()
-            model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_data.shape[1],1)))
+            model.add(LSTM(units=50,return_sequences=True,input_shape=(scaled_x_train.shape[1],1)))
             model.add(Dropout(0.2))
             model.add(LSTM(units=50,return_sequences=True))
             model.add(Dropout(0.2) )
-            model.add(LSTM(units=50,return_sequences=True))
+            model.add(LSTM(units=50,return_sequences=False))
             model.add(Dense(units=1))
             model.compile(optimizer='adam',loss='mean_squared_error')
-            model.fit(X_train,self.history,epochs=25,batch_size=32)
+            scaled_y_train=numpy.asarray(Y_train.values.tolist()).astype('float32')
+
+            scaled_x_train=numpy.reshape(scaled_x_train,(scaled_x_train.shape[0],scaled_x_train.shape[1],1))
+            scaled_y_train=numpy.reshape(scaled_y_train,(scaled_y_train.shape[0],scaled_y_train.shape[1],1))
+            model.fit(scaled_x_train,scaled_y_train,epochs=25,batch_size=32)
 
 
-    def plot_price(self):
+            scaled_prediction=model.predict(scaled_x_train)
+            prediction=[math.exp(x) for x in scaled_prediction]
+            Y=[math.exp(x) for x in Y_train['Open'].values]
+
+            df=pandas.DataFrame({'Date':self.history["Date"].tolist(),'Open':Y,'Open_prediction':prediction})
+            list_df['LTSM']=df
+
+        import matplotlib.pyplot as pyplot
+
         name=[n for n,v in globals().items() if v == self][0]
-        labels=[name]
 
-        plt=self.plotter(self.history)
-        plt.savefig('./Data/Asset/fig/plot_'+name+'.png')
+        fig,ax=pyplot.subplots(figsize=(8,4))
+
+        import colorsys
+        N = len(list_df.keys())+1
+        HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
+        RGB_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))
+        i=0
+
+        t=df['Date']
+        ax.plot_date(t,df['Open'],color=RGB_tuples[i],linestyle='solid',label='Price of stock '+name)
+        for key,value in list_df.items():
+            i+=1
+            t=value['Date']
+            pyplot.plot_date(t,value['Open_prediction'],linestyle='solid',color=RGB_tuples[i],label='Predicted price of '+name+' with '+key)
+        pyplot.legend()
+        #print(os.getcwd())
+        pyplot.savefig(os.getcwd()+'/Data/Class/Asset/fig/plot_prediction_price_'+name+'.png')
+        pyplot.show()
+
+        return(list_df)
+            
 
 if __name__=='__main__':
 
@@ -270,7 +309,12 @@ if __name__=='__main__':
     Rubis.MA()
     Rubis.derivative_rate_()
     Rubis.normalize_date(Assets={'Safran':Safran,'EDF':EDF})
-    Rubis.prediction_price(method='LTSM')
+
+    print(Asset)
+
+    Rubis.prediction_price(method=set(['ARIMA','LTSM']))
+
+    #Rubis.prediction_price(method='LTSM')
     #corr_Rubis=Rubis.correlation_coefficient({'Wheat':Wheat,'Brent':Brent},{i:1/7 for i in range(1,8)})
 
     #Rubis.normalize_date({'Safran':Safran,'EDF':EDF,'Wheat':Wheat,'Brent':Brent})

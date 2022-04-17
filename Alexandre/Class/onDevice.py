@@ -47,7 +47,7 @@ class onDevice:
         stdout.close()
         stderr.close()
         print("Running function "+file_path_script_destination)
-        stdin,stdout,stderr=self.ssh.exec_command('python3.7 '+file_path_script_destination)
+        stdin,stdout,stderr=self.ssh.exec_command('python3 '+file_path_script_destination)
         stdout.channel.recv_exit_status()
         print(stdout.readlines())
         stdin.close()
@@ -72,5 +72,5 @@ class onDevice:
         print("Closing SSH connection")
         self.ssh.close()
 
-with onDevice(class_=["Asset","Reddit"]) as f:
-    f.run("fun_A")
+with onDevice(class_=["Asset","Reddit"]) as GCP:
+    GCP.run("fun_A")

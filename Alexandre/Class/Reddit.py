@@ -135,10 +135,6 @@ class Reddit:
         )
         self.embedding=model.encode_sentences(self.redit_data['headlines'],combine_strategy=False)
 
-    def predict(self,asset):
-        sigma,r=asset.prediction_RNN_black_box(self.embedding)
-        P=asset.solve_Black_Scholes(sigma,r)
-
 if __name__=='__main__':
     Ukraine=Reddit(topic="Ukraine",
                    top=100,
