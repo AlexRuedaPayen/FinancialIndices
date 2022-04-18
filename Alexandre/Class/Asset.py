@@ -9,11 +9,6 @@ from Alexandre.Class.Scrapper import Scrapper
 from Alexandre.Class.Scrapper import Scrapper_financial_Yahoo,Scrapper_history_Yahoo,Scrapper_info_Yahoo
 header={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
 
-#import tensorflow
-
-"""from sklearn.preprocessing import MinMaxScaler
-from tensorflow.contrib.keras.models import Sequential,load_model
-from tensorflow.contrib.keras.models import LSTM,Dense,Dropout"""
 
 class Asset:
 
@@ -102,6 +97,8 @@ class Asset:
             tmpr=pandas.DataFrame(tmpr)
             tmpr.columns=df.columns
             df=tmpr
+            print(tmpr)
+            print((self.history.loc)[1:(n-2),'Date'].values)
             tmpr=tmpr.assign(Date=(self.history.loc)[1:(n-2),'Date'].values)
             self.derivative_rate.append(tmpr)
 
@@ -213,6 +210,7 @@ class Asset:
             from sklearn.metrics import mean_squared_error
 
             df=self.history.loc[:,['Date','Open']]
+
             train_data, test_data = df[0:int((df.shape[0])*0.7)], df[int((df.shape[0])*0.7):]
             training_data = train_data['Open'].values
             test_data = test_data['Open'].values   
@@ -336,11 +334,9 @@ if __name__=='__main__':
     """Wheat=Asset('ZW%3DF')
     Brent=Asset('BZ%3DF')"""
 
-    """Rubis.derivative_rate_()
     Rubis.normalize_date(Assets={'Safran':Safran,'EDF':EDF})
-    #Rubis.prediction_price(method=set(['LTSM']))
     corr_Rubis=Rubis.correlation_coefficient({i:1/7 for i in range(1,8)})
-    Rubis.prediction_price(method=set(['LTSM']))"""
+    Rubis.prediction_price(method=set(['LTSM','ARIMA']))
 
     #Rubis.normalize_date({'Safran':Safran,'EDF':EDF,'Wheat':Wheat,'Brent':Brent})
     #Rubis.plot_price()

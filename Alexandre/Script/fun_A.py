@@ -27,12 +27,6 @@ def fun_A():
     with open("./Data/Script/fun_A.json","w") as f:
         f.write(json.dumps(JSON,indent=4))
 
-    """JSON={}
-    JSON['reddit_data']={'col1':[1,2,3],'col2':[2,3,4]}
-    JSON['topic_list']={'col1':[0],'col2':['0.5*cat +0.5*dog']}
-    with open(device_path+"Financial_Indices/Data/Script/fun_A.json","w") as f:
-        f.write(json.dumps(JSON,indent=4))
-    print(device_path+"Financial_Indices/Data/Script/fun_A.json created with success")"""
 
 if __name__=='__main__':
     fun_A()

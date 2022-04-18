@@ -7,6 +7,8 @@ class onDevice:
                 class_=["Asset"],
                 data_=["RUI.PA"]):
 
+        import paramiko,scp,json
+
         with open('/Users/alexandreprofessional2/Desktop/key/GCP/credentials.json', 'r') as f:
             credentials = json.load(f)
 
@@ -47,9 +49,10 @@ class onDevice:
         stdout.close()
         stderr.close()
         print("Running function "+file_path_script_destination)
-        stdin,stdout,stderr=self.ssh.exec_command('python3 '+file_path_script_destination)
+        stdin,stdout,stderr=self.ssh.exec_command('python3.7 '+file_path_script_destination)
         stdout.channel.recv_exit_status()
         print(stdout.readlines())
+        print(stderr.readlines())
         stdin.close()
         stdout.close()
         stderr.close()
@@ -74,3 +77,4 @@ class onDevice:
 
 with onDevice(class_=["Asset","Reddit"]) as GCP:
     GCP.run("fun_A")
+    GCP.run("fun_Asset")
