@@ -1,0 +1,5 @@
+pandas
+beautifulsoup
+requests
+scikit-learn
+tensorflow
