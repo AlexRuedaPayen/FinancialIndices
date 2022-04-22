@@ -1,4 +1,4 @@
-import pandas
+import pandas,numpy
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -14,6 +14,23 @@ class Scrapper:
         self.scheme=scheme
         self.header=header
         self.type=type
+
+    def fill_wikipedia_table(self,url):
+        scheme=self.scheme
+        r=requests.get(url,headers=self.header)
+        web_content=BeautifulSoup(r.text,'html')
+        df=[]
+        web_content_key4=[]
+        list_df=[]
+        soup=web_content
+        web_content_key32=[x.text for x in soup.find_all('span',class_="mw-headline")]
+        web_content_key2=soup.find_all("table",{"class":"wikitable sortable"})
+        for x in web_content_key2:
+            web_content_key3=x.find_all('tr')
+            web_content_key4.append([[y.text for y in x.find_all('td')] for x in web_content_key3])
+        print(web_content_key32)
+        list_df.append(pandas.DataFrame(numpy.array([y[0:4] for x in web_content_key4 for y in x if len(y)==5])))
+        return(pandas.concat(list_df,axis=0))
 
     def fill_table(self,url,header=True):
         scheme=self.scheme
@@ -37,7 +54,6 @@ class Scrapper:
             if header:
                 header_=list(value1['header'].keys())[0]
                 class__=value1['header'][header_]['class_']
-                print(header_,class__)
                 for name in web_content_key1[0].find_all(header_,class_=class__):
                     colname.append(name.text)
                 df_tmpr.columns=colname
@@ -88,6 +104,8 @@ class Scrapper:
             return(self.fill_boxes(url))
         if (self.type=='table'):
             return(self.fill_table(url,header))
+        if (self.type=='wikipedia_table'):
+            return(self.fill_wikipedia_table(url))
 
 
 
@@ -250,8 +268,26 @@ if __name__=='__main__':
         }
     }
 
+    url="https://simplemaps.com/data/ua-cities"
     Scrapper_Press_Releases=Scrapper(scheme=scheme,header=header,type='box')
     print(Scrapper_Press_Releases(url=url))
+
+    scheme={
+        'div':{
+            'class_':'wtSpreader',
+            'row':{
+                'td':{
+                    'class_1':'current area',
+                    'class_2':'area'
+                }
+            },
+            'header':{
+                'span':{
+                    'class':'colHeader columnSorting'
+                }
+            }
+        }
+    }
 
     """
     url=(('https://www.bloomberg.com/europe'))
